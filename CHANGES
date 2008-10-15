@@ -1,0 +1,12 @@
+0.1.2 ()
+=====
+* Added license headers to each source code file
+
+0.1.1 (15-04-2008)
+=====
+* More portable invokation of make
+* Now installs also .cmx file
+
+0.1.0 (17-10-2007)
+=====
+* Initial release

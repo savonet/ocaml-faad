@@ -1,0 +1,5 @@
+name="Faad"
+version="@VERSION@"
+description="Ocaml bindings to libfaad"
+archive(byte) = "faad.cma"
+archive(native) = "faad.cmxa"
