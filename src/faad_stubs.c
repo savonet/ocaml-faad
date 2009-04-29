@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include <neaacdec.h>
+#include <mp4ff.h>
 
 CAMLprim value ocaml_faad_open(value unit)
 {
@@ -124,4 +125,140 @@ CAMLprim value ocaml_faad_decode(value dh, value _inbuf, value _inbufofs, value 
 CAMLprim value ocaml_faad_get_error_message(value err)
 {
   return caml_copy_string((char*)NeAACDecGetErrorMessage(Int_val(err)));
+}
+
+/***** MP4 *****/
+
+typedef struct
+{
+  mp4ff_t *ff;
+  mp4ff_callback_t ff_cb;
+  value read_cb;
+  value write_cb;
+  value seek_cb;
+  value trunc_cb;
+} mp4_t;
+
+#define Mp4_val(v) (*((mp4_t**)Data_custom_val(v)))
+
+static void finalize_mp4(value e)
+{
+  mp4_t *mp = Mp4_val(e);
+
+  if (mp->ff)
+    mp4ff_close(mp->ff);
+  if (mp->read_cb)
+    caml_remove_generational_global_root(&mp->read_cb);
+  if (mp->write_cb)
+    caml_remove_generational_global_root(&mp->write_cb);
+  if (mp->seek_cb)
+    caml_remove_generational_global_root(&mp->seek_cb);
+  if (mp->trunc_cb)
+    caml_remove_generational_global_root(&mp->trunc_cb);
+
+  free(mp);
+}
+
+static struct custom_operations mp4_ops =
+{
+  "ocaml_mp4_t",
+  finalize_mp4,
+  custom_compare_default,
+  custom_hash_default,
+  custom_serialize_default,
+  custom_deserialize_default
+};
+
+static uint32_t read_cb(void *user_data, void *buffer, uint32_t length)
+{
+  //mp4_t *mp = (mp4_t*)user_data;
+
+  return 0;
+}
+
+static uint32_t write_cb(void *user_data, void *buffer, uint32_t length)
+{
+  //mp4_t *mp = (mp4_t*)user_data;
+
+  return 0;
+}
+
+static uint32_t seek_cb(void *user_data, uint64_t position)
+{
+  //mp4_t *mp = (mp4_t*)user_data;
+
+  return 0;
+}
+
+static uint32_t trunc_cb(void *user_data)
+{
+  //mp4_t *mp = (mp4_t*)user_data;
+
+  return 0;
+}
+
+CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write, value seek, value trunc)
+{
+  CAMLparam4(read, write, seek, trunc);
+  CAMLlocal1(ans);
+
+  mp4_t *mp = malloc(sizeof(mp4_t));
+  mp->ff_cb.read = read_cb;
+  mp->read_cb = read;
+  caml_register_generational_global_root(&mp->read_cb);
+  if (Is_block(write))
+  {
+    mp->ff_cb.write = write_cb;
+    mp->write_cb =  Field(write, 0);
+    caml_register_generational_global_root(&mp->write_cb);
+  }
+  else
+  {
+    mp->ff_cb.write = NULL;
+    mp->write_cb = 0;
+  }
+  if (Is_block(seek))
+  {
+    mp->ff_cb.seek = seek_cb;
+    mp->seek_cb = Field(seek, 0);
+    caml_register_generational_global_root(&mp->seek_cb);
+  }
+  else
+  {
+    mp->ff_cb.seek = NULL;
+    mp->seek_cb = 0;
+  }
+  if (Is_block(trunc))
+  {
+    mp->ff_cb.truncate = trunc_cb;
+    mp->trunc_cb = Field(trunc, 0);
+    caml_register_generational_global_root(&mp->trunc_cb);
+  }
+  else
+  {
+    mp->ff_cb.truncate = NULL;
+    mp->trunc_cb = 0;
+  }
+  mp->ff_cb.user_data = mp;
+
+  ans = caml_alloc_custom(&mp4_ops, sizeof(mp4_t*), 1, 0);
+  Mp4_val(ans) = mp;
+
+  if(Bool_val(metaonly))
+    mp4ff_open_read_metaonly(&mp->ff_cb);
+  else
+    mp4ff_open_read(&mp->ff_cb);
+
+  CAMLreturn(ans);
+}
+
+CAMLprim value ocaml_faad_mp4_total_tracks(value m)
+{
+  CAMLparam1(m);
+  mp4_t *mp = Mp4_val(m);
+  int n;
+
+  n = mp4ff_total_tracks(mp->ff);
+
+  CAMLreturn(Val_int(n));
 }

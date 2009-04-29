@@ -49,3 +49,14 @@ let find_frame buf =
         incr i
     done;
     if !found then !i else raise Not_found
+
+module Mp4 =
+struct
+  type t
+
+  external open_read : bool -> (int -> (string * int)) -> (string -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
+
+  let openfile ?write ?seek ?trunc read = open_read false read write seek trunc
+
+  external total_tracks : t -> int = "ocaml_faad_mp4_total_tracks"
+end
