@@ -36,9 +36,18 @@
 #include <sys/types.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include <neaacdec.h>
 #include <mp4ff.h>
+
+static void check_err(int n)
+{
+  if (n < 0)
+    caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
+}
+
+#define Dec_val(v) ((NeAACDecHandle)v)
 
 CAMLprim value ocaml_faad_open(value unit)
 {
@@ -53,7 +62,7 @@ CAMLprim value ocaml_faad_open(value unit)
 
 CAMLprim value ocaml_faad_close(value dh)
 {
-  NeAACDecClose((NeAACDecHandle)dh);
+  NeAACDecClose(Dec_val(dh));
 
   return Val_unit;
 }
@@ -65,7 +74,8 @@ CAMLprim value ocaml_faad_init(value dh, value buf, value ofs, value len)
   int32_t ret;
   value ans;
 
-  ret = NeAACDecInit((NeAACDecHandle)dh, (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
+  ret = NeAACDecInit(Dec_val(dh), (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
+  check_err(ret);
 
   ans = caml_alloc_tuple(3);
   Store_field(ans, 0, Val_int(ret));
@@ -81,7 +91,8 @@ CAMLprim value ocaml_faad_init2(value dh, value buf, value ofs, value len)
   int8_t ret;
   value ans;
 
-  ret = NeAACDecInit2((NeAACDecHandle)dh, (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
+  ret = NeAACDecInit2(Dec_val(dh), (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
+  check_err(ret);
 
   ans = caml_alloc_tuple(2);
   Store_field(ans, 0, Val_int(samplerate));
@@ -103,8 +114,13 @@ CAMLprim value ocaml_faad_decode(value dh, value _inbuf, value _inbufofs, value 
   memcpy(inbuf, String_val(_inbuf)+inbufofs, inbuflen);
 
   caml_enter_blocking_section();
-  data = NeAACDecDecode((NeAACDecHandle)dh, &frameInfo, inbuf, inbuflen);
+  data = NeAACDecDecode(Dec_val(dh), &frameInfo, inbuf, inbuflen);
   caml_leave_blocking_section();
+  if (!data)
+  {
+    free(inbuf);
+    caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
+  }
 
   if (frameInfo.error != 0)
     caml_raise_with_arg(*caml_named_value("ocaml_faad_exn_error"), Val_int(frameInfo.error));
@@ -171,9 +187,17 @@ static struct custom_operations mp4_ops =
 
 static uint32_t read_cb(void *user_data, void *buffer, uint32_t length)
 {
-  //mp4_t *mp = (mp4_t*)user_data;
+  mp4_t *mp = (mp4_t*)user_data;
+  value ans;
+  int ofs, len;
 
-  return 0;
+  ans = caml_callback(mp->read_cb, Val_int(length));
+  ofs = Int_val(Field(ans, 1));
+  len = Int_val(Field(ans, 2));
+  ans = Field(ans, 0);
+  memcpy(buffer, String_val(ans)+ofs, len);
+
+  return len;
 }
 
 static uint32_t write_cb(void *user_data, void *buffer, uint32_t length)
@@ -185,9 +209,17 @@ static uint32_t write_cb(void *user_data, void *buffer, uint32_t length)
 
 static uint32_t seek_cb(void *user_data, uint64_t position)
 {
-  //mp4_t *mp = (mp4_t*)user_data;
+  mp4_t *mp = (mp4_t*)user_data;
+  value ans;
+  int pos;
 
-  return 0;
+  printf("SEEK: %llu\n", position);
+
+  ans = caml_callback(mp->seek_cb, Val_int(position));
+
+  pos = Int_val(ans);
+
+  return pos;
 }
 
 static uint32_t trunc_cb(void *user_data)
@@ -241,13 +273,14 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   }
   mp->ff_cb.user_data = mp;
 
+  if(Bool_val(metaonly))
+    mp->ff = mp4ff_open_read_metaonly(&mp->ff_cb);
+  else
+    mp->ff = mp4ff_open_read(&mp->ff_cb);
+  assert(mp->ff);
+
   ans = caml_alloc_custom(&mp4_ops, sizeof(mp4_t*), 1, 0);
   Mp4_val(ans) = mp;
-
-  if(Bool_val(metaonly))
-    mp4ff_open_read_metaonly(&mp->ff_cb);
-  else
-    mp4ff_open_read(&mp->ff_cb);
 
   CAMLreturn(ans);
 }
@@ -261,4 +294,120 @@ CAMLprim value ocaml_faad_mp4_total_tracks(value m)
   n = mp4ff_total_tracks(mp->ff);
 
   CAMLreturn(Val_int(n));
+}
+
+CAMLprim value ocaml_faad_mp4_find_aac_track(value m)
+{
+  CAMLparam1(m);
+  mp4_t *mp = Mp4_val(m);
+
+  int i, rc;
+  int num_tracks = mp4ff_total_tracks(mp->ff);
+
+  for (i = 0; i < num_tracks; i++) {
+    unsigned char *buff = NULL;
+    unsigned int buff_size = 0;
+    mp4AudioSpecificConfig mp4ASC;
+
+    mp4ff_get_decoder_config(mp->ff, i, &buff, &buff_size);
+
+    if (buff)
+    {
+      rc = NeAACDecAudioSpecificConfig(buff, buff_size, &mp4ASC);
+      free(buff);
+      if (rc < 0)
+        continue;
+      CAMLreturn(Val_int(i));
+    }
+  }
+
+  caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
+}
+
+CAMLprim value ocaml_faad_mp4_init(value m, value dec, value track)
+{
+  CAMLparam2(m, track);
+  CAMLlocal1(ans);
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+  int ret;
+  unsigned int samplerate;
+  unsigned char channels;
+
+  unsigned char *mp4_buffer = NULL;
+  unsigned int mp4_buffer_size = 0;
+
+  mp4ff_get_decoder_config(mp->ff, t, &mp4_buffer, &mp4_buffer_size);
+  ret = NeAACDecInit2(Dec_val(dec), mp4_buffer, mp4_buffer_size, &samplerate, &channels);
+  check_err(ret);
+
+  ans = caml_alloc_tuple(2);
+  Store_field(ans, 0, Val_int(samplerate));
+  Store_field(ans, 1, Val_int(channels));
+
+  CAMLreturn(ans);
+}
+
+/*
+file_time = mp4ff_get_track_duration_use_offsets(mp4fh, track);
+	scale = mp4ff_time_scale(mp4fh, track);
+*/
+
+CAMLprim value ocaml_faad_mp4_num_samples(value m, value track)
+{
+  CAMLparam2(m, track);
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+  int ans;
+
+  ans = mp4ff_num_samples(mp->ff, t);
+
+  CAMLreturn(Val_int(ans));
+}
+
+CAMLprim value ocaml_faad_mp4_get_sample_duration(value m, value track, value sample)
+{
+  CAMLparam3(m, track, sample);
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+  int s = Int_val(sample);
+  int ans;
+
+  ans = mp4ff_get_sample_duration(mp->ff, t, s);
+
+  CAMLreturn(Val_int(ans));
+}
+
+CAMLprim value ocaml_faad_mp4_get_sample_offset(value m, value track, value sample)
+{
+  CAMLparam3(m, track, sample);
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+  int s = Int_val(sample);
+  int ans;
+
+  ans = mp4ff_get_sample_offset(mp->ff, t, s);
+
+  CAMLreturn(Val_int(ans));
+}
+
+CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
+{
+  CAMLparam3(m, track, sample);
+  CAMLlocal1(ans);
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+  int s = Int_val(sample);
+  unsigned char *buf;
+  unsigned int buflen;
+  int ret;
+
+  ret = mp4ff_read_sample(mp->ff, t, s, &buf, &buflen);
+  check_err(ret);
+
+  ans = caml_alloc_string(buflen);
+  memcpy(String_val(ans), buf, buflen);
+  free(buf);
+
+  CAMLreturn(ans);
 }

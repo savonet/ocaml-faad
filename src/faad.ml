@@ -22,13 +22,17 @@ type t
 
 exception Error of int
 
-external get_error_message : int -> string = "ocaml_faad_get_error_message"
+exception Failed
+
+external error_message : int -> string = "ocaml_faad_get_error_message"
 
 let () =
-  Callback.register_exception "ocaml_faad_exn_error" (Error 0)
+  Callback.register_exception "ocaml_faad_exn_error" (Error 0);
+  Callback.register_exception "ocaml_faad_exn_failed" Failed
 
 external create : unit -> t = "ocaml_faad_open"
 
+(* TODO: finalizer *)
 external close : t -> unit = "ocaml_faad_close"
 
 external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
@@ -52,11 +56,33 @@ let find_frame buf =
 
 module Mp4 =
 struct
+  type decoder = t
+
   type t
 
-  external open_read : bool -> (int -> (string * int)) -> (string -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
+  type track = int
+
+  type sample = int
+
+  let is_mp4 s =
+    assert (String.length s >= 8);
+    s.[4] = 'f' && s.[5] = 't' && s.[6] = 'y' && s.[7] = 'p'
+
+  external open_read : bool -> (int -> (string * int * int)) -> (string -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
 
   let openfile ?write ?seek ?trunc read = open_read false read write seek trunc
 
-  external total_tracks : t -> int = "ocaml_faad_mp4_total_tracks"
+  external tracks : t -> int = "ocaml_faad_mp4_total_tracks"
+
+  external find_aac_track : t -> track = "ocaml_faad_mp4_find_aac_track"
+
+  external init : t -> decoder -> track -> int * int = "ocaml_faad_mp4_init"
+
+  external samples : t -> track -> int = "ocaml_faad_mp4_num_samples"
+
+  external sample_duration : t -> track -> sample -> int = "ocaml_faad_mp4_get_sample_duration"
+
+  external sample_offset : t -> track -> sample -> int = "ocaml_faad_mp4_get_sample_offset"
+
+  external read_sample : t -> track -> sample -> string = "ocaml_faad_mp4_read_sample"
 end
