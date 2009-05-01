@@ -164,13 +164,13 @@ static void finalize_mp4(value e)
   if (mp->ff)
     mp4ff_close(mp->ff);
   if (mp->read_cb)
-    caml_remove_generational_global_root(&mp->read_cb);
+    caml_remove_global_root(&mp->read_cb);
   if (mp->write_cb)
-    caml_remove_generational_global_root(&mp->write_cb);
+    caml_remove_global_root(&mp->write_cb);
   if (mp->seek_cb)
-    caml_remove_generational_global_root(&mp->seek_cb);
+    caml_remove_global_root(&mp->seek_cb);
   if (mp->trunc_cb)
-    caml_remove_generational_global_root(&mp->trunc_cb);
+    caml_remove_global_root(&mp->trunc_cb);
 
   free(mp);
 }
@@ -213,8 +213,6 @@ static uint32_t seek_cb(void *user_data, uint64_t position)
   value ans;
   int pos;
 
-  printf("SEEK: %llu\n", position);
-
   ans = caml_callback(mp->seek_cb, Val_int(position));
 
   pos = Int_val(ans);
@@ -237,12 +235,12 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   mp4_t *mp = malloc(sizeof(mp4_t));
   mp->ff_cb.read = read_cb;
   mp->read_cb = read;
-  caml_register_generational_global_root(&mp->read_cb);
+  caml_register_global_root(&mp->read_cb);
   if (Is_block(write))
   {
     mp->ff_cb.write = write_cb;
     mp->write_cb =  Field(write, 0);
-    caml_register_generational_global_root(&mp->write_cb);
+    caml_register_global_root(&mp->write_cb);
   }
   else
   {
@@ -253,7 +251,7 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   {
     mp->ff_cb.seek = seek_cb;
     mp->seek_cb = Field(seek, 0);
-    caml_register_generational_global_root(&mp->seek_cb);
+    caml_register_global_root(&mp->seek_cb);
   }
   else
   {
@@ -264,7 +262,7 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   {
     mp->ff_cb.truncate = trunc_cb;
     mp->trunc_cb = Field(trunc, 0);
-    caml_register_generational_global_root(&mp->trunc_cb);
+    caml_register_global_root(&mp->trunc_cb);
   }
   else
   {
