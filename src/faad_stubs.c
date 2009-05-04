@@ -116,14 +116,17 @@ CAMLprim value ocaml_faad_decode(value dh, value _inbuf, value _inbufofs, value 
   caml_enter_blocking_section();
   data = NeAACDecDecode(Dec_val(dh), &frameInfo, inbuf, inbuflen);
   caml_leave_blocking_section();
+
   if (!data)
   {
     free(inbuf);
     caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
   }
-
   if (frameInfo.error != 0)
+  {
+    free(inbuf);
     caml_raise_with_arg(*caml_named_value("ocaml_faad_exn_error"), Val_int(frameInfo.error));
+  }
 
   outbuf = caml_alloc_tuple(frameInfo.channels);
   for(c = 0; c < frameInfo.channels; c++)
