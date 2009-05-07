@@ -243,7 +243,7 @@ static uint32_t trunc_cb(void *user_data)
 {
   //mp4_t *mp = (mp4_t*)user_data;
 
-  return 0;
+  return -1;
 }
 
 CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write, value seek, value trunc)
