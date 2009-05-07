@@ -70,7 +70,11 @@ struct
 
   external open_read : bool -> (int -> (string * int * int)) -> (string -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
 
+  external open_read_fd : bool -> Unix.file_descr -> t = "ocaml_faad_mp4_open_read_fd"
+
   let openfile ?write ?seek ?trunc read = open_read false read write seek trunc
+
+  let openfile_fd = open_read_fd false
 
   external tracks : t -> int = "ocaml_faad_mp4_total_tracks"
 
@@ -85,4 +89,6 @@ struct
   external sample_offset : t -> track -> sample -> int = "ocaml_faad_mp4_get_sample_offset"
 
   external read_sample : t -> track -> sample -> string = "ocaml_faad_mp4_read_sample"
+
+  external decode : t -> track -> sample -> decoder -> float array array = "ocaml_faad_mp4_decode"
 end

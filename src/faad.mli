@@ -79,6 +79,8 @@ sig
   (** Open an MP4 file. *)
   val openfile : ?write:(string -> int) -> ?seek:(int -> int) -> ?trunc:(unit -> int) -> (int -> (string * int * int)) -> t
 
+  val openfile_fd : Unix.file_descr -> t
+
   (** Total number of tracks. *)
   val tracks : t -> int
 
@@ -87,4 +89,10 @@ sig
 
   (** Initialize a decoder. *)
   val init : t -> decoder -> track -> int * int
+
+  val samples : t -> track -> int
+
+  val read_sample : t -> track -> sample -> string
+
+  val decode : t -> track -> sample -> decoder -> float array array
 end
