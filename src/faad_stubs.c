@@ -520,3 +520,37 @@ CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value d
 
   CAMLreturn(outbuf);
 }
+
+CAMLprim value ocaml_faad_mp4_metadata(value m)
+{
+  CAMLparam1(m);
+  CAMLlocal2(ans,v);
+  mp4_t *mp = Mp4_val(m);
+  int i, n;
+  char *tag, *item;
+
+  caml_enter_blocking_section();
+  n = mp4ff_meta_get_num_items(mp->ff);
+  caml_leave_blocking_section();
+
+  ans = caml_alloc_tuple(n);
+  for (i = 0; i < n; i++)
+  {
+    tag = NULL;
+    item = NULL;
+
+    caml_enter_blocking_section();
+    mp4ff_meta_get_by_index(mp->ff, i, &item, &tag);
+    caml_leave_blocking_section();
+
+    assert(item && tag);
+    v = caml_alloc_tuple(2);
+    Store_field(v, 0, caml_copy_string(item));
+    Store_field(v, 1, caml_copy_string(tag));
+    Store_field(ans, i, v);
+    free(item);
+    free(tag);
+  }
+
+  CAMLreturn(ans);
+}

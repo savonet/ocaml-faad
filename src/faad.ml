@@ -91,4 +91,6 @@ struct
   external read_sample : t -> track -> sample -> string = "ocaml_faad_mp4_read_sample"
 
   external decode : t -> track -> sample -> decoder -> float array array = "ocaml_faad_mp4_decode"
+
+  external metadata : t -> (string * string) array = "ocaml_faad_mp4_metadata"
 end

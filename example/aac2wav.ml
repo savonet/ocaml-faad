@@ -109,6 +109,7 @@ let _ =
     let fill_out = fill_out channels in
     let samples = Faad.Mp4.samples mp4 track in
       Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
+      Array.iter (fun (i,t) -> Printf.printf "%s: %s\n%!" i t) (Faad.Mp4.metadata mp4);
       Printf.printf "%d tracks (AAC track: %d).\n%!" (Faad.Mp4.tracks mp4) track;
       Printf.printf "%d samples.\n" samples;
       for i = 0 to samples - 1 do

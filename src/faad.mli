@@ -95,4 +95,6 @@ sig
   val read_sample : t -> track -> sample -> string
 
   val decode : t -> track -> sample -> decoder -> float array array
+
+  val metadata : t -> (string * string) array
 end
