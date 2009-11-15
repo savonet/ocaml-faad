@@ -54,6 +54,7 @@ let find_frame buf =
     done;
     if !found then !i else raise Not_found
 
+(*
 module Mp4 =
 struct
   type decoder = t
@@ -94,3 +95,4 @@ struct
 
   external metadata : t -> (string * string) array = "ocaml_faad_mp4_metadata"
 end
+*)

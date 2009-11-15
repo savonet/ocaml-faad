@@ -40,7 +40,6 @@
 #include <stdio.h>
 
 #include <neaacdec.h>
-#include <mp4ff.h>
 
 static void check_err(int n)
 {
@@ -70,7 +69,7 @@ CAMLprim value ocaml_faad_close(value dh)
 
 CAMLprim value ocaml_faad_init(value dh, value buf, value ofs, value len)
 {
-  u_int32_t samplerate;
+  unsigned long samplerate;
   u_int8_t channels;
   int32_t ret;
   value ans;
@@ -87,7 +86,7 @@ CAMLprim value ocaml_faad_init(value dh, value buf, value ofs, value len)
 
 CAMLprim value ocaml_faad_init2(value dh, value buf, value ofs, value len)
 {
-  u_int32_t samplerate;
+  unsigned long samplerate;
   u_int8_t channels;
   int8_t ret;
   value ans;
@@ -145,10 +144,10 @@ CAMLprim value ocaml_faad_get_error_message(value err)
 
 /***** MP4 *****/
 
+/*
+
 typedef struct
 {
-  mp4ff_t *ff;
-  mp4ff_callback_t ff_cb;
   int fd;
   value read_cb;
   value write_cb;
@@ -408,11 +407,6 @@ CAMLprim value ocaml_faad_mp4_init(value m, value dh, value track)
   CAMLreturn(ans);
 }
 
-/*
-file_time = mp4ff_get_track_duration_use_offsets(mp4fh, track);
-	scale = mp4ff_time_scale(mp4fh, track);
-*/
-
 CAMLprim value ocaml_faad_mp4_num_samples(value m, value track)
 {
   CAMLparam2(m, track);
@@ -480,7 +474,7 @@ CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
   CAMLreturn(ans);
 }
 
-/* Same as Faad.decode (Faad.Mp4.read_sample) but more efficient. Share code? */
+// Same as Faad.decode (Faad.Mp4.read_sample) but more efficient. Share code?
 CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value dh)
 {
   CAMLparam4(m, track, sample, dh);
@@ -554,3 +548,5 @@ CAMLprim value ocaml_faad_mp4_metadata(value m)
 
   CAMLreturn(ans);
 }
+
+*/

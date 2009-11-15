@@ -84,6 +84,7 @@ let _ =
       outbuf := !outbuf ^ tmp
   in
 
+  (*
   let decode_mp4 () =
     let mp4 =
       (*
@@ -119,6 +120,7 @@ let _ =
       done;
       channels, samplerate, !outbuf
   in
+  *)
 
   let decode_aac () =
     let consumed = ref buflen in
@@ -154,10 +156,12 @@ let _ =
   in
 
   let channels, samplerate, outbuf =
+    (*
     try
       decode_mp4 ()
     with
       | _ ->
+    *)
           ignore (Unix.lseek f 0 Unix.SEEK_SET);
           decode_aac ()
   in

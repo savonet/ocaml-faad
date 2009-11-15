@@ -60,6 +60,7 @@ val decode : t -> string -> int -> int -> int * (float array array)
 (** Heuristic guess of the offset of the begining of a frame. *)
 val find_frame : string -> int
 
+(*
 module Mp4 :
 sig
   type decoder = t
@@ -98,3 +99,4 @@ sig
 
   val metadata : t -> (string * string) array
 end
+*)
