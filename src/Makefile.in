@@ -28,7 +28,7 @@ RESULT = faad
 OCAMLDOCFLAGS = -stars
 LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.cmx *.a *.so)
 LDFLAGS = @LDFLAGS@
-ACLIBS = @LIBS@
+ACLIBS = @LIBS@ -lmp4ff
 CLIBS = $(ACLIBS:-l%=%)
 LIBDIRS = $(LDFLAGS:-L%=%)
 CC = @CC@

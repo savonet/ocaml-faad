@@ -40,6 +40,7 @@
 #include <stdio.h>
 
 #include <neaacdec.h>
+#include <mp4ff.h>
 
 static void check_err(int n)
 {
@@ -144,10 +145,10 @@ CAMLprim value ocaml_faad_get_error_message(value err)
 
 /***** MP4 *****/
 
-/*
-
 typedef struct
 {
+  mp4ff_t *ff;
+  mp4ff_callback_t ff_cb;
   int fd;
   value read_cb;
   value write_cb;
@@ -387,7 +388,7 @@ CAMLprim value ocaml_faad_mp4_init(value m, value dh, value track)
   mp4_t *mp = Mp4_val(m);
   int t = Int_val(track);
   int ret;
-  unsigned int samplerate;
+  long unsigned int samplerate;
   unsigned char channels;
   NeAACDecHandle dec = Dec_val(dh);
 
@@ -548,5 +549,3 @@ CAMLprim value ocaml_faad_mp4_metadata(value m)
 
   CAMLreturn(ans);
 }
-
-*/
