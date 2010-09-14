@@ -32,8 +32,12 @@ let () =
 
 external create : unit -> t = "ocaml_faad_open"
 
-(* TODO: finalizer *)
 external close : t -> unit = "ocaml_faad_close"
+
+let create () =
+  let x = create () in
+  Gc.finalise close x ;
+  x
 
 external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
 external init2 : t -> string -> int -> int -> int * int = "ocaml_faad_init2"
