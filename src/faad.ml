@@ -1,21 +1,20 @@
 (*
- Copyright (C) 2003-2008 Samuel Mimram
-
- This file is part of Ocaml-faad.
-
- This library is free software; you can redistribute it and/or
- modify it under the terms of the GNU Lesser General Public
- License as published by the Free Software Foundation; either
- version 2.1 of the License, or (at your option) any later version.
-
- This library is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- Lesser General Public License for more details.
-
- You should have received a copy of the GNU Lesser General Public
- License along with this library; if not, write to the Free Software
- Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (C) 2003-2008 Samuel Mimram
+ *           (C) 2006-2010 The Savonet Team
+ *
+ * Ocaml-faad is free software; you can redistribute it and/or modify<F12>
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * Ocaml-faad is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Ocaml-faad; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *)
 
 type t
@@ -32,15 +31,7 @@ let () =
 
 external create : unit -> t = "ocaml_faad_open"
 
-external close : t -> unit = "ocaml_faad_close"
-
-let create () =
-  let x = create () in
-  Gc.finalise close x ;
-  x
-
 external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
-external init2 : t -> string -> int -> int -> int * int = "ocaml_faad_init2"
 
 external decode : t -> string -> int -> int -> int * (float array array) = "ocaml_faad_decode"
 
@@ -98,3 +89,4 @@ struct
 
   external metadata : t -> (string * string) array = "ocaml_faad_mp4_metadata"
 end
+

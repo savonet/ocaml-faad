@@ -7,36 +7,36 @@
 
 OCAMLMAKEFILE = OCamlMakefile
 
-OCAMLFIND = @OCAMLFIND@
-OCAMLFIND_LDCONF = @OCAMLFIND_LDCONF@
-OCAMLC = @OCAMLC@
-OCAMLOPT = @OCAMLOPT@
-BEST = @BEST@
+OCAMLFIND = /usr/bin/ocamlfind
+OCAMLFIND_LDCONF = 
+OCAMLC = /usr/bin/ocamlc
+OCAMLOPT = /usr/bin/ocamlopt
+BEST = byte opt
 OCAMLMKTOP = @OCAMLMKTOP@
-OCAMLCP = @OCAMLCP@
-OCAMLDEP = @OCAMLDEP@
+OCAMLCP = 
+OCAMLDEP = /usr/bin/ocamldep
 OCAMLLEX = @OCAMLLEX@
 OCAMLYACC = @OCAMLYACC@
-OCAMLDOC = @OCAMLDOC@
+OCAMLDOC = /usr/bin/ocamldoc
 LATEX = @LATEX@
 DVIPS = @DVIPS@
 PS2PDF = @PS2PDF@
-OCAMLLIBPATH = @CAMLLIBPATH@
+OCAMLLIBPATH = /usr/lib/ocaml
 
 SOURCES = faad.mli faad.ml faad_stubs.c drms.c mp4atom.c mp4ff.c  mp4meta.c  \
           mp4sample.c mp4tagupdate.c mp4util.c
 RESULT = faad
 OCAMLDOCFLAGS = -stars
 LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.cmx *.a *.so)
-LDFLAGS = @LDFLAGS@
-ACLIBS = @LIBS@
+LDFLAGS = 
+ACLIBS =  -lfaad -lm
 CLIBS = $(ACLIBS:-l%=%)
 LIBDIRS = $(LDFLAGS:-L%=%)
-CC = @CC@
-CFLAGS = @CFLAGS@ -Wall -DCAML_NAME_SPACE -DUSE_TAGGING -DITUNES_DRM
-CPPFLAGS = @CPPFLAGS@
+CC = gcc
+CFLAGS =  -I/home/toots/sources/svn/savonet/trunk/ocaml-faad/. -DHAVE_CONFIG_H  -Wall -DCAML_NAME_SPACE -DUSE_TAGGING -DITUNES_DRM
+CPPFLAGS =  
 NO_CUSTOM = yes
-OCAMLFLAGS = @OCAMLFLAGS@
+OCAMLFLAGS = 
 
 
 all: $(BEST)

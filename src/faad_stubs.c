@@ -1,21 +1,22 @@
 /*
  * Copyright (C) 2003-2008 Samuel Mimram
+ *           (C) 2008-2010 The Savonet Team
  *
  * This file is part of Ocaml-faad.
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * Ocaml-faad is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * Ocaml-faad is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ * You should have received a copy of the GNU General Public License
+ * along with Ocaml-faad; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 /**
@@ -40,7 +41,7 @@
 #include <stdio.h>
 
 #include <neaacdec.h>
-#include <mp4ff.h>
+#include "mp4ff.h"
 
 static void check_err(int n)
 {
@@ -48,62 +49,80 @@ static void check_err(int n)
     caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
 }
 
-#define Dec_val(v) ((NeAACDecHandle)v)
+#define Dec_val(v) (*(NeAACDecHandle*)Data_custom_val(v))
+
+static void finalize_faad_dec(value l)
+{
+  NeAACDecHandle dh = Dec_val(l);
+  NeAACDecClose(dh);
+}
+
+static struct custom_operations faad_dec_ops =
+{
+  "ocaml_faad_dec",
+  finalize_faad_dec,
+  custom_compare_default,
+  custom_hash_default,
+  custom_serialize_default,
+  custom_deserialize_default
+};
 
 CAMLprim value ocaml_faad_open(value unit)
 {
+  CAMLparam0();
+  CAMLlocal1(ret);
   NeAACDecHandle dh = NeAACDecOpen();
   NeAACDecConfigurationPtr conf = NeAACDecGetCurrentConfiguration(dh);
 
   conf->outputFormat = FAAD_FMT_FLOAT;
   NeAACDecSetConfiguration(dh, conf);
 
-  return (value)dh;
+  ret  = caml_alloc_custom(&faad_dec_ops, sizeof(NeAACDecHandle), 0, 1);
+  Dec_val(ret) = dh;
+
+  CAMLreturn(ret);
 }
 
-CAMLprim value ocaml_faad_close(value dh)
-{
-  NeAACDecClose(Dec_val(dh));
+#include <stdio.h>
 
-  return Val_unit;
-}
-
-CAMLprim value ocaml_faad_init(value dh, value buf, value ofs, value len)
+CAMLprim value ocaml_faad_init(value dh, value _buf, value _ofs, value _len)
 {
+  CAMLparam2(dh,_buf);
+  CAMLlocal1(ans);
+
   unsigned long samplerate;
   u_int8_t channels;
-  int32_t ret;
-  value ans;
+  int32_t offset;
+  int32_t pre_offset = 0;
+  int ofs = Int_val(_ofs);
+  int len = Int_val(_len);
+  unsigned char *buf = (unsigned char*)String_val(_buf);
+  int i;
 
-  ret = NeAACDecInit(Dec_val(dh), (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
-  check_err(ret);
+  /* ADTS mpeg file can be a stream and start in the middle of a
+   * frame so we need to have extra loop check here */
+  for (i = ofs; i < len - 1; i++)
+  {
+    if (buf[i] == 0xff && (buf[i+1] & 0xf6) == 0xf0) 
+    {
+      pre_offset =  i;
+      break;
+    }
+  }
+
+  offset = NeAACDecInit(Dec_val(dh), buf+ofs+pre_offset, len-pre_offset, &samplerate, &channels);
+  check_err(offset);
 
   ans = caml_alloc_tuple(3);
-  Store_field(ans, 0, Val_int(ret));
+  Store_field(ans, 0, Val_int(offset+pre_offset));
   Store_field(ans, 1, Val_int(samplerate));
   Store_field(ans, 2, Val_int(channels));
-  return ans;
+  CAMLreturn(ans);
 }
 
-CAMLprim value ocaml_faad_init2(value dh, value buf, value ofs, value len)
+CAMLprim value ocaml_faad_decode(value _dh, value _inbuf, value _inbufofs, value _inbuflen)
 {
-  unsigned long samplerate;
-  u_int8_t channels;
-  int8_t ret;
-  value ans;
-
-  ret = NeAACDecInit2(Dec_val(dh), (unsigned char*)String_val(buf)+Int_val(ofs), Int_val(len), &samplerate, &channels);
-  check_err(ret);
-
-  ans = caml_alloc_tuple(2);
-  Store_field(ans, 0, Val_int(samplerate));
-  Store_field(ans, 1, Val_int(channels));
-  return ans;
-}
-
-CAMLprim value ocaml_faad_decode(value dh, value _inbuf, value _inbufofs, value _inbuflen)
-{
-  CAMLparam1(_inbuf);
+  CAMLparam2(_dh,_inbuf);
   CAMLlocal2(ans, outbuf);
   NeAACDecFrameInfo frameInfo;
   int inbufofs = Int_val(_inbufofs);
@@ -114,14 +133,14 @@ CAMLprim value ocaml_faad_decode(value dh, value _inbuf, value _inbufofs, value 
 
   memcpy(inbuf, String_val(_inbuf)+inbufofs, inbuflen);
 
+  NeAACDecHandle dh = Dec_val(_dh);
+
   caml_enter_blocking_section();
-  data = NeAACDecDecode(Dec_val(dh), &frameInfo, inbuf, inbuflen);
+  data = NeAACDecDecode(dh, &frameInfo, inbuf, inbuflen);
   caml_leave_blocking_section();
 
   free(inbuf);
 
-  if (!data)
-    caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
   if (frameInfo.error != 0)
     caml_raise_with_arg(*caml_named_value("ocaml_faad_exn_error"), Val_int(frameInfo.error));
 

@@ -13,6 +13,13 @@ if test "x$prefix" != "xNONE"; then
 	CPPFLAGS="$CPPFLAGS -I$prefix/include"
 fi
 
+# Include a config.h
+AC_CONFIG_HEADERS([config.h:config.h.in])
+# Include it
+CFLAGS="$CFLAGS -I`pwd`/`dirname $0` -DHAVE_CONFIG_H"
+
+AC_CHECK_HEADERS([errno.h])
+
 OCAMLFIND_LDCONF=""
 AC_ARG_ENABLE([ldconf], AC_HELP_STRING([--disable-ldconf],[don't modify the dynamic loader configuration file (default is enable)]),[ac_enable_ldconf=$enableval],[ac_enable_ldconf=$enableval],[ac_enable_ldconf=yes])
 if test "$ac_enable_ldconf" = no ; then
