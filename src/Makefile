@@ -9,8 +9,8 @@ OCAMLMAKEFILE = OCamlMakefile
 
 OCAMLFIND = /usr/bin/ocamlfind
 OCAMLFIND_LDCONF = 
-OCAMLC = /usr/bin/ocamlc
-OCAMLOPT = /usr/bin/ocamlopt
+OCAMLC = /usr/bin/ocamlc.opt
+OCAMLOPT = /usr/bin/ocamlopt.opt
 BEST = byte opt
 OCAMLMKTOP = @OCAMLMKTOP@
 OCAMLCP = 

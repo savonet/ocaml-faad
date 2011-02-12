@@ -1,6 +1,7 @@
-x.y.z ()
+0.2.0 (12-02-2011)
 =====
 * Registered close method for the finalizer.
+* Added a static copy of mp4ff.. 
 
 0.1.3 (11-10-2009)
 =====
