@@ -151,7 +151,6 @@ let _ =
         with
           | End_of_file
           | Faad.Failed ->
-              Faad.close dec;
               channels, samplerate, !outbuf
   in
 

@@ -83,15 +83,13 @@ CAMLprim value ocaml_faad_open(value unit)
   CAMLreturn(ret);
 }
 
-#include <stdio.h>
-
 CAMLprim value ocaml_faad_init(value dh, value _buf, value _ofs, value _len)
 {
   CAMLparam2(dh,_buf);
   CAMLlocal1(ans);
 
   unsigned long samplerate;
-  u_int8_t channels;
+  uint8_t channels;
   int32_t offset;
   int32_t pre_offset = 0;
   int ofs = Int_val(_ofs);
@@ -324,13 +322,19 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   CAMLreturn(ans);
 }
 
+#ifdef WIN32
+#define GET_FD(fh) _open_osfhandle(fh,0)
+#else
+#define GET_FD(fh) Int_val(fh)
+#endif
+
 CAMLprim value ocaml_faad_mp4_open_read_fd(value metaonly, value fd)
 {
   CAMLparam2(metaonly, fd);
   CAMLlocal1(ans);
 
   mp4_t *mp = malloc(sizeof(mp4_t));
-  mp->fd = Int_val(fd);
+  mp->fd = GET_FD(fd);
   mp->ff_cb.read = read_cb;
   mp->read_cb = 0;
   mp->ff_cb.write = write_cb;

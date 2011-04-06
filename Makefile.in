@@ -2,7 +2,7 @@
 
 PROGNAME := ocaml-faad
 DISTFILES := CHANGES COPYING Makefile.in README \
-	bootstrap configure configure.ac config.h.in \
+	bootstrap configure configure.ac config.h.in m4/*.m4 \
 	src/*.ml src/*.mli src/*.c src/Makefile.in src/META.in \
 	src/OCamlMakefile src/*.h 
 VERSION = @VERSION@
