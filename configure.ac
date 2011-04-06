@@ -24,6 +24,7 @@ AC_CHECK_OCAML_COMPILERS()
 
 AC_PROG_CC()
 AC_CHECK_TOOL([AR],[ar],no)
+AC_SUBST(AR)
 # Check for libfaad
 FAAC_LIBS="-lfaad -lm"
 FAAC_CFLAGS=""
