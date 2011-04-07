@@ -33,6 +33,7 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/signals.h>
+#include <caml/unixsupport.h>
 
 #include <sys/types.h>
 #include <string.h>
@@ -323,7 +324,7 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
 }
 
 #ifdef WIN32
-#define GET_FD(fh) _open_osfhandle(fh,0)
+#define GET_FD(fh) win_CRT_fd_of_filedescr(fh)
 #else
 #define GET_FD(fh) Int_val(fh)
 #endif
