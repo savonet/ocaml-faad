@@ -33,6 +33,10 @@ exception Failed
 (** Get the error message corresponding to a raised [Error]. *)
 val error_message : int -> string
 
+(** A decode call can eat up to [min_bytes_per_channel] bytes per decoded channel,
+   so at least so much bytes per channel should be available in this stream. *)
+val min_bytes_per_channel : int
+
 val create : unit -> t
 
 (** [init dec buf ofs len] initializes a decoder given the [len] bytes of data

@@ -84,6 +84,11 @@ CAMLprim value ocaml_faad_open(value unit)
   CAMLreturn(ret);
 }
 
+CAMLprim value ocaml_faad_min_bytes_per_channel(value unit)
+{
+  return Val_int(FAAD_MIN_STREAMSIZE);
+}
+
 CAMLprim value ocaml_faad_init(value dh, value _buf, value _ofs, value _len)
 {
   CAMLparam2(dh,_buf);
@@ -140,7 +145,7 @@ CAMLprim value ocaml_faad_decode(value _dh, value _inbuf, value _inbufofs, value
 
   free(inbuf);
 
-  if (frameInfo.error != 0)
+  if (frameInfo.error > 0)
     caml_raise_with_arg(*caml_named_value("ocaml_faad_exn_error"), Val_int(frameInfo.error));
 
   outbuf = caml_alloc_tuple(frameInfo.channels);

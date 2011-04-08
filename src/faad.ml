@@ -29,6 +29,10 @@ let () =
   Callback.register_exception "ocaml_faad_exn_error" (Error 0);
   Callback.register_exception "ocaml_faad_exn_failed" Failed
 
+external min_bytes_per_channel : unit -> int = "ocaml_faad_min_bytes_per_channel"
+
+let min_bytes_per_channel = min_bytes_per_channel ()
+
 external create : unit -> t = "ocaml_faad_open"
 
 external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
