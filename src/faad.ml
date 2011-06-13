@@ -39,6 +39,8 @@ external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
 
 external decode : t -> string -> int -> int -> int * (float array array) = "ocaml_faad_decode"
 
+external post_sync_reset : t -> unit = "ocaml_faad_post_seek_reset"
+
 let find_frame buf =
   let i = ref 0 in
   let found = ref false in
@@ -74,6 +76,15 @@ struct
   let openfile ?write ?seek ?trunc read = open_read false read write seek trunc
 
   let openfile_fd = open_read_fd false
+
+  external seek : t -> track -> int -> int*int = "ocaml_faad_mp4_seek"
+
+  let seek mp4 track offset = 
+    let sample,to_skip = seek mp4 track offset in
+    if sample < 0 then
+      raise Failed
+    else
+      sample,to_skip
 
   external tracks : t -> int = "ocaml_faad_mp4_total_tracks"
 

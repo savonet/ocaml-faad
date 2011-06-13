@@ -51,6 +51,8 @@ val init : t -> string -> int -> int -> int * int * int
   *)
 val decode : t -> string -> int -> int -> int * (float array array)
 
+val post_sync_reset : t -> unit
+
 (** Heuristic guess of the offset of the begining of a frame. *)
 val find_frame : string -> int
 
@@ -71,7 +73,10 @@ sig
   val is_mp4 : string -> bool
 
   (** Open an MP4 file. *)
-  val openfile : ?write:(string -> int) -> ?seek:(int -> int) -> ?trunc:(unit -> int) -> (int -> (string * int * int)) -> t
+  val openfile : ?write:(string -> int) -> 
+                 ?seek:(int -> int) -> 
+                 ?trunc:(unit -> int) -> 
+                 (int -> (string * int * int)) -> t
 
   val openfile_fd : Unix.file_descr -> t
 
@@ -83,6 +88,13 @@ sig
 
   (** Initialize a decoder. *)
   val init : t -> decoder -> track -> int * int
+
+  (** Seek to the given offset, in audio samples. 
+    * returns a pair [sample,toskip] where
+    * [sample] is the new current (mp4) sample
+    * and [toskip] is an amount of audio sample 
+    * that should be skipped. *)
+  val seek : t -> track -> int -> int*int
 
   val samples : t -> track -> int
 

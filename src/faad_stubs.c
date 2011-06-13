@@ -124,6 +124,14 @@ CAMLprim value ocaml_faad_init(value dh, value _buf, value _ofs, value _len)
   CAMLreturn(ans);
 }
 
+CAMLprim value ocaml_faad_post_seek_reset(value _dh)
+{
+  CAMLparam1(_dh);
+  NeAACDecHandle dh = Dec_val(_dh);
+  NeAACDecPostSeekReset(dh,0);
+  CAMLreturn(Val_unit);
+}
+
 CAMLprim value ocaml_faad_decode(value _dh, value _inbuf, value _inbufofs, value _inbuflen)
 {
   CAMLparam2(_dh,_inbuf);
@@ -376,6 +384,25 @@ CAMLprim value ocaml_faad_mp4_total_tracks(value m)
   caml_leave_blocking_section();
 
   CAMLreturn(Val_int(n));
+}
+
+CAMLprim value ocaml_faad_mp4_seek(value m, value track, value offset)
+{
+  CAMLparam1(m);
+  CAMLlocal1(ret);
+  int32_t toskip = 0;
+  mp4_t *mp = Mp4_val(m);
+  int t = Int_val(track);
+
+  caml_enter_blocking_section();
+  int sample = mp4ff_find_sample(mp->ff,t,(int64_t)(Int_val(offset)),&toskip);
+  caml_leave_blocking_section();
+
+  ret = caml_alloc_tuple(2);
+  Field(ret,0) = Val_int(sample);
+  Field(ret,1) = Val_int(toskip);
+
+  CAMLreturn(ret);
 }
 
 CAMLprim value ocaml_faad_mp4_find_aac_track(value m)
