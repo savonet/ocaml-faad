@@ -515,8 +515,8 @@ CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
   mp4_t *mp = Mp4_val(m);
   int t = Int_val(track);
   int s = Int_val(sample);
-  unsigned char *buf;
-  unsigned int buflen;
+  unsigned char *buf = NULL;
+  unsigned int buflen = 0;
   int ret;
 
   caml_enter_blocking_section();
@@ -541,8 +541,8 @@ CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value d
   int s = Int_val(sample);
   NeAACDecHandle dec = Dec_val(dh);
   NeAACDecFrameInfo frameInfo;
-  unsigned char *inbuf;
-  unsigned int inbuflen;
+  unsigned char *inbuf = NULL;
+  unsigned int inbuflen = 0;
   float *data;
   int c, i, ret;
 
