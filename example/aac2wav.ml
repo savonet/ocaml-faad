@@ -29,9 +29,7 @@ let bufsize = 16 * 1024
 let src = ref ""
 let dst = ref ""
 
-
 open Unix
-
 
 let output_int chan n =
   output_char chan (char_of_int ((n lsr 0) land 0xff));
@@ -39,24 +37,22 @@ let output_int chan n =
   output_char chan (char_of_int ((n lsr 16) land 0xff));
   output_char chan (char_of_int ((n lsr 24) land 0xff))
 
-
 let output_short chan n =
   output_char chan (char_of_int ((n lsr 0) land 0xff));
   output_char chan (char_of_int ((n lsr 8) land 0xff))
 
-
 let usage = "usage: aac2wav [options] source destination"
 
-let _ =
+let () =
   Arg.parse
     []
     (
       let pnum = ref (-1) in
-        (fun s -> incr pnum; match !pnum with
-           | 0 -> src := s
-           | 1 -> dst := s
-           | _ -> Printf.eprintf "Error: too many arguments\n"; exit 1
-        )
+      (fun s -> incr pnum; match !pnum with
+      | 0 -> src := s
+      | 1 -> dst := s
+      | _ -> Printf.eprintf "Error: too many arguments\n"; exit 1
+      )
     ) usage;
   if !src = "" || !dst = "" then
     (
@@ -73,54 +69,34 @@ let _ =
   let fill_out channels a =
     let tmplen = Array.length a.(0) in
     let tmp = String.create (tmplen * channels * 2) in
-      for i = 0 to tmplen - 1 do
-        for c = 0 to channels - 1 do
-          let n = a.(c).(i) *. 32767. in
-          let n = int_of_float n in
-            tmp.[2 * (i * channels + c)] <- char_of_int (n land 0xff);
-            tmp.[2 * (i * channels + c) + 1] <- char_of_int ((n lsr 8) land 0xff)
-        done
-      done;
-      outbuf := !outbuf ^ tmp
+    for i = 0 to tmplen - 1 do
+      for c = 0 to channels - 1 do
+        let n = a.(c).(i) *. 32767. in
+        let n = int_of_float n in
+        tmp.[2 * (i * channels + c)] <- char_of_int (n land 0xff);
+        tmp.[2 * (i * channels + c) + 1] <- char_of_int ((n lsr 8) land 0xff)
+      done
+    done;
+    outbuf := !outbuf ^ tmp
   in
 
-  (*
   let decode_mp4 () =
-    let mp4 =
-      (*
-      let read n =
-        (* Printf.printf "read: %d\n%!" n; *)
-        let buf = String.create n in
-        let len = Unix.read f buf 0 n in
-          buf, 0, len
-      in
-      let seek n =
-        (* Printf.printf "seek: %d\n%!" n; *)
-        try
-          ignore (Unix.lseek f n Unix.SEEK_SET); 0
-        with
-          | _ -> -1
-      in
-        Faad.Mp4.openfile ~seek read
-      *)
-      Faad.Mp4.openfile_fd f
-    in
+    let mp4 = Faad.Mp4.openfile_fd f in
     let track = Faad.Mp4.find_aac_track mp4 in
     let samplerate, channels = Faad.Mp4.init mp4 dec track in
     let fill_out = fill_out channels in
     let samples = Faad.Mp4.samples mp4 track in
-      Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
-      Array.iter (fun (i,t) -> Printf.printf "%s: %s\n%!" i t) (Faad.Mp4.metadata mp4);
-      Printf.printf "%d tracks (AAC track: %d).\n%!" (Faad.Mp4.tracks mp4) track;
-      Printf.printf "%d samples.\n" samples;
-      for i = 0 to samples - 1 do
-        Printf.printf "sample: %d (%d bytes)\n%!" i (String.length !outbuf);
-        let a = Faad.Mp4.decode mp4 track i dec in
-          fill_out a
-      done;
-      channels, samplerate, !outbuf
+    Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
+    Array.iter (fun (i,t) -> Printf.printf "%s: %s\n%!" i t) (Faad.Mp4.metadata mp4);
+    Printf.printf "%d tracks (AAC track: %d).\n%!" (Faad.Mp4.tracks mp4) track;
+    Printf.printf "%d samples.\n" samples;
+    for i = 0 to samples - 1 do
+      (* Printf.printf "sample: %d (%d bytes)\n%!" i (String.length !outbuf); *)
+      let a = Faad.Mp4.decode mp4 track i dec in
+      fill_out a
+    done;
+    channels, samplerate, !outbuf
   in
-  *)
 
   let decode_aac () =
     let consumed = ref buflen in
@@ -128,59 +104,55 @@ let _ =
       String.blit buf !consumed buf 0 (buflen - !consumed);
       let n = Unix.read f buf (buflen - !consumed) !consumed in
       let n = !consumed + n in
-        consumed := 0;
-        n
+      consumed := 0;
+      n
     in
 
     let offset, samplerate, channels = Faad.init dec buf 0 (Unix.read f buf 0 buflen) in
     let fill_out = fill_out channels in
-      Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
-      ignore (Unix.lseek f offset Unix.SEEK_SET);
+    Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
+    ignore (Unix.lseek f offset Unix.SEEK_SET);
 
-        Printf.printf "Decoding AAC...\n%!";
-        try
-          while true do
-            let r = fill_in () in
-              if r = 0 then raise End_of_file;
-              if buf.[0] <> '\255' then raise End_of_file;
-              let c, a = Faad.decode dec buf 0 r in
-                consumed := c;
-                fill_out a
-          done;
-          channels, samplerate, !outbuf
-        with
-          | End_of_file
-          | Faad.Failed ->
-              channels, samplerate, !outbuf
+    Printf.printf "Decoding AAC...\n%!";
+    try
+      while true do
+        let r = fill_in () in
+        if r = 0 then raise End_of_file;
+        if buf.[0] <> '\255' then raise End_of_file;
+        let c, a = Faad.decode dec buf 0 r in
+        consumed := c;
+        fill_out a
+      done;
+      channels, samplerate, !outbuf
+    with
+    | End_of_file
+    | Faad.Failed ->
+      channels, samplerate, !outbuf
   in
 
   let channels, samplerate, outbuf =
-    (*
-    try
+    if Filename.check_suffix !src ".aac" || Filename.check_suffix !src ".AAC" then
+      decode_aac ()
+    else
       decode_mp4 ()
-    with
-      | _ ->
-    *)
-          ignore (Unix.lseek f 0 Unix.SEEK_SET);
-          decode_aac ()
   in
 
   (* Do the wav stuff. *)
   let datalen = String.length outbuf in
   let oc = open_out_bin !dst in
-    output_string oc "RIFF";
-    output_int oc (4 + 24 + 8 + datalen);
-    output_string oc "WAVE";
-    output_string oc "fmt ";
-    output_int oc 16;
-    output_short oc 1; (* WAVE_FORMAT_PCM *)
-    output_short oc channels; (* channels *)
-    output_int oc samplerate; (* freq *)
-    output_int oc (samplerate * channels * 2); (* bytes / s *)
-    output_short oc (channels * 2); (* block alignment *)
-    output_short oc 16; (* bits per sample *)
-    output_string oc "data";
-    output_int oc datalen;
-    output_string oc outbuf;
-    close_out oc;
-    Gc.full_major ()
+  output_string oc "RIFF";
+  output_int oc (4 + 24 + 8 + datalen);
+  output_string oc "WAVE";
+  output_string oc "fmt ";
+  output_int oc 16;
+  output_short oc 1; (* WAVE_FORMAT_PCM *)
+  output_short oc channels; (* channels *)
+  output_int oc samplerate; (* freq *)
+  output_int oc (samplerate * channels * 2); (* bytes / s *)
+  output_short oc (channels * 2); (* block alignment *)
+  output_short oc 16; (* bits per sample *)
+  output_string oc "data";
+  output_int oc datalen;
+  output_string oc outbuf;
+  close_out oc;
+  Gc.full_major ()
