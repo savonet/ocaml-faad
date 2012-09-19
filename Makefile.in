@@ -4,7 +4,8 @@ PROGNAME := ocaml-faad
 DISTFILES := @AUTOCONF_INSTALL_FILES@ CHANGES COPYING Makefile.in README \
 	bootstrap configure configure.ac config.h.in  \
 	src/*.ml src/*.mli src/*.c src/Makefile.in src/META.in \
-	src/OCamlMakefile src/*.h 
+	src/OCamlMakefile src/*.h example/*.ml example/Makefile \
+	example/OCamlMakefile
 VERSION = @VERSION@
 
 all clean install uninstall:
