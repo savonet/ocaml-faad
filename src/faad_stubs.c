@@ -455,6 +455,8 @@ CAMLprim value ocaml_faad_mp4_init(value m, value dh, value track)
   mp4ff_get_decoder_config(mp->ff, t, &mp4_buffer, &mp4_buffer_size);
   ret = NeAACDecInit2(dec, mp4_buffer, mp4_buffer_size, &samplerate, &channels);
   caml_leave_blocking_section();
+
+  free(mp4_buffer);
   check_err(ret);
 
   ans = caml_alloc_tuple(2);
