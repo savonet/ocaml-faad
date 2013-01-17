@@ -91,10 +91,11 @@ let () =
     Printf.printf "%d tracks (AAC track: %d).\n%!" (Faad.Mp4.tracks mp4) track;
     Printf.printf "%d samples.\n" samples;
     for i = 0 to samples - 1 do
-      (* Printf.printf "sample: %d (%d bytes)\n%!" i (String.length !outbuf); *)
+      Printf.printf "Decoding sample: %d / %d (%d bytes).\r%!" i samples (String.length !outbuf);
       let a = Faad.Mp4.decode mp4 track i dec in
       fill_out a
     done;
+    Printf.printf "\n%!";
     channels, samplerate, !outbuf
   in
 
