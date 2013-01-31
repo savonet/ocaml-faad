@@ -100,16 +100,20 @@ let () =
   in
 
   let decode_aac () =
+    let len = Unix.read f buf 0 buflen in
+    let offset, samplerate, channels = Faad.init dec buf 0 len in
+    let buflen  = max buflen Faad.min_bytes_per_channel * channels in
     let consumed = ref buflen in
+    let aacbuf = String.create buflen in
+
     let fill_in () =
-      String.blit buf !consumed buf 0 (buflen - !consumed);
-      let n = Unix.read f buf (buflen - !consumed) !consumed in
+      String.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);
+      let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
       let n = !consumed + n in
       consumed := 0;
       n
     in
 
-    let offset, samplerate, channels = Faad.init dec buf 0 (Unix.read f buf 0 buflen) in
     let fill_out = fill_out channels in
     Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
     ignore (Unix.lseek f offset Unix.SEEK_SET);
@@ -119,8 +123,8 @@ let () =
       while true do
         let r = fill_in () in
         if r = 0 then raise End_of_file;
-        if buf.[0] <> '\255' then raise End_of_file;
-        let c, a = Faad.decode dec buf 0 r in
+        if aacbuf.[0] <> '\255' then raise End_of_file;
+        let c, a = Faad.decode dec aacbuf 0 r in
         consumed := c;
         fill_out a
       done;
