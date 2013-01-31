@@ -155,6 +155,8 @@ CAMLprim value ocaml_faad_decode(value _dh, value _inbuf, value _inbufofs, value
 
   if (frameInfo.error > 0)
     caml_raise_with_arg(*caml_named_value("ocaml_faad_exn_error"), Val_int(frameInfo.error));
+  if (!data)
+    caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
 
   outbuf = caml_alloc_tuple(frameInfo.channels);
   for(c = 0; c < frameInfo.channels; c++)
