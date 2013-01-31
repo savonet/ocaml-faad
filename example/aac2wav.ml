@@ -129,6 +129,9 @@ let () =
     | End_of_file
     | Faad.Failed ->
       channels, samplerate, !outbuf
+    | Faad.Error n as e ->
+      Printf.printf "Faad error %d: %s\n%!" n (Faad.error_message n);
+      raise e
   in
 
   let channels, samplerate, outbuf =
