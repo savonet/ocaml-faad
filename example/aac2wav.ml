@@ -102,16 +102,18 @@ let () =
   let decode_aac () =
     let len = Unix.read f buf 0 buflen in
     let offset, samplerate, channels = Faad.init dec buf 0 len in
-    let buflen  = max buflen Faad.min_bytes_per_channel * channels in
+    let buflen  = Faad.min_bytes_per_channel * channels in
     let consumed = ref buflen in
     let aacbuf = String.create buflen in
 
     let fill_in () =
-      String.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);
-      let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
-      let n = !consumed + n in
-      consumed := 0;
-      n
+      let rem = String.sub aacbuf !consumed (buflen - !consumed) in
+      String.blit rem 0 aacbuf 0 (buflen - !consumed);
+      while !consumed <> 0 do
+        let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
+        if n = 0 then raise End_of_file;
+        consumed := !consumed - n;
+      done
     in
 
     let fill_out = fill_out channels in
@@ -121,10 +123,9 @@ let () =
     Printf.printf "Decoding AAC...\n%!";
     try
       while true do
-        let r = fill_in () in
-        if r = 0 then raise End_of_file;
-        if aacbuf.[0] <> '\255' then raise End_of_file;
-        let c, a = Faad.decode dec aacbuf 0 r in
+        fill_in ();
+        if aacbuf.[0] <> '\255' then failwith "Invalid data";
+        let c, a = Faad.decode dec aacbuf 0 buflen in
         consumed := c;
         fill_out a
       done;
