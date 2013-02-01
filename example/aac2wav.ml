@@ -107,8 +107,7 @@ let () =
     let aacbuf = String.create buflen in
 
     let fill_in () =
-      let rem = String.sub aacbuf !consumed (buflen - !consumed) in
-      String.blit rem 0 aacbuf 0 (buflen - !consumed);
+      String.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);
       while !consumed <> 0 do
         let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
         if n = 0 then raise End_of_file;
