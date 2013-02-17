@@ -1,5 +1,3 @@
-# $Id: Makefile.in 2660 2006-07-18 17:23:31Z dbaelde $
-
 PROGNAME := ocaml-faad
 DISTFILES := @AUTOCONF_INSTALL_FILES@ CHANGES COPYING Makefile.in README \
 	bootstrap configure configure.ac config.h.in  \
