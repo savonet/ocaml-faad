@@ -1,3 +1,8 @@
+0.3.3 ()
+=====
+* Fix freeze when trying to parse
+  unknown atoms.
+
 0.3.2 (17-02-2013)
 =====
 * Fix memory leak at init.
