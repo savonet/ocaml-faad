@@ -637,9 +637,12 @@ int32_t mp4ff_read_stsd(mp4ff_t *f)
         {
             f->track[f->total_tracks - 1]->type = TRACK_AUDIO;
             mp4ff_read_mp4a(f);
+// Disable ALAC for now..
+#if 0
         } else if (atom_type == ATOM_ALAC) {
             f->track[f->total_tracks - 1]->type = TRACK_AUDIO;
             mp4ff_read_alac(f);
+#endif
         } else if (atom_type == ATOM_MP4V) {
             f->track[f->total_tracks - 1]->type = TRACK_VIDEO;
         } else if (atom_type == ATOM_MP4S) {
