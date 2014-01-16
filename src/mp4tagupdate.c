@@ -204,6 +204,8 @@ typedef struct
 } mp4ff_metadata_t;
 #endif
 
+#define       COPYRIGHT_SYMBOL        ((int8_t)0xA9)
+
 typedef struct
 {
 	const char * atom;
@@ -212,14 +214,14 @@ typedef struct
 
 static stdmeta_entry stdmetas[] = 
 {
-	{"©nam","title"},
-	{"©ART","artist"},
-	{"©wrt","writer"},
-	{"©alb","album"},
-	{"©day","date"},
-	{"©too","tool"},
-	{"©cmt","comment"},
-//	{"©gen","genre"},
+	{"\xA9" "nam","title"},
+	{"xA9" "ART","artist"},
+	{"xA9" "wrt","writer"},
+	{"xA9" "alb","album"},
+	{"xA9" "day","date"},
+	{"xA9" "too","tool"},
+	{"xA9" "cmt","comment"},
+//	{"xA9" "gen","genre"},
 	{"cpil","compilation"},
 //	{"trkn","track"},
 //	{"disk","disc"},
@@ -354,7 +356,7 @@ static uint32_t create_ilst(const mp4ff_metadata_t * data,void ** out_buffer,uin
 		{
 			uint32_t index = mp4ff_meta_genre_to_index(genre_ptr);
 			if (index==0)
-				membuffer_write_std_tag(buf,"©gen",genre_ptr);
+				membuffer_write_std_tag(buf,"xA9" "gen",genre_ptr);
 			else
 				membuffer_write_int16_tag(buf,"gnre",(uint16_t)index);
 		}
