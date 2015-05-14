@@ -482,36 +482,6 @@ CAMLprim value ocaml_faad_mp4_num_samples(value m, value track)
   CAMLreturn(Val_int(ans));
 }
 
-CAMLprim value ocaml_faad_mp4_get_sample_duration(value m, value track, value sample)
-{
-  CAMLparam3(m, track, sample);
-  mp4_t *mp = Mp4_val(m);
-  int t = Int_val(track);
-  int s = Int_val(sample);
-  int ans;
-
-  caml_enter_blocking_section();
-  ans = mp4ff_get_sample_duration(mp->ff, t, s);
-  caml_leave_blocking_section();
-
-  CAMLreturn(Val_int(ans));
-}
-
-CAMLprim value ocaml_faad_mp4_get_sample_offset(value m, value track, value sample)
-{
-  CAMLparam3(m, track, sample);
-  mp4_t *mp = Mp4_val(m);
-  int t = Int_val(track);
-  int s = Int_val(sample);
-  int ans;
-
-  caml_enter_blocking_section();
-  ans = mp4ff_get_sample_offset(mp->ff, t, s);
-  caml_leave_blocking_section();
-
-  CAMLreturn(Val_int(ans));
-}
-
 CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
 {
   CAMLparam3(m, track, sample);

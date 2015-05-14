@@ -94,10 +94,6 @@ struct
 
   external samples : t -> track -> int = "ocaml_faad_mp4_num_samples"
 
-  external sample_duration : t -> track -> sample -> int = "ocaml_faad_mp4_get_sample_duration"
-
-  external sample_offset : t -> track -> sample -> int = "ocaml_faad_mp4_get_sample_offset"
-
   external read_sample : t -> track -> sample -> string = "ocaml_faad_mp4_read_sample"
 
   external decode : t -> track -> sample -> decoder -> float array array = "ocaml_faad_mp4_decode"
