@@ -1,4 +1,4 @@
-0.3.3 ()
+0.3.3 (03-08-2015)
 =====
 * Fix freeze when trying to parse
   unknown atoms.
