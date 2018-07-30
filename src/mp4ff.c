@@ -1,35 +1,36 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
-** Copyright (C) 2003-2004 M. Bakker, Ahead Software AG, http://www.nero.com
-**
+** Copyright (C) 2003-2005 M. Bakker, Nero AG, http://www.nero.com
+**  
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-**
+** 
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-**
+** 
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software
+** along with this program; if not, write to the Free Software 
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
 ** forbidden.
 **
-** Commercial non-GPL licensing of this software is possible.
-** For more info contact Ahead Software through Mpeg4AAClicense@nero.com.
+** The "appropriate copyright message" mentioned in section 2c of the GPLv2
+** must read: "Code from FAAD2 is copyright (c) Nero AG, www.nero.com"
 **
-** $Id: mp4ff.c,v 1.17 2005/02/01 13:15:55 menno Exp $
+** Commercial non-GPL licensing of this software is possible.
+** For more info contact Nero AG through Mpeg4AAClicense@nero.com.
+**
+** $Id: mp4ff.c,v 1.22 2009/01/26 23:01:40 menno Exp $
 **/
 
 #include <stdlib.h>
 #include <string.h>
 #include "mp4ffint.h"
-
-#include "drms.h"
 
 mp4ff_t *mp4ff_open_read(mp4ff_callback_t *f)
 {
@@ -40,6 +41,12 @@ mp4ff_t *mp4ff_open_read(mp4ff_callback_t *f)
     ff->stream = f;
 
     parse_atoms(ff,0);
+
+    if (ff->error)
+    {
+        free(ff);
+        ff = NULL;
+    }
 
     return ff;
 }
@@ -53,6 +60,12 @@ mp4ff_t *mp4ff_open_read_metaonly(mp4ff_callback_t *f)
     ff->stream = f;
 
     parse_atoms(ff,1);
+
+    if (ff->error)
+    {
+        free(ff);
+        ff = NULL;
+    }
 
     return ff;
 }
@@ -100,9 +113,16 @@ void mp4ff_close(mp4ff_t *ff)
     if (ff) free(ff);
 }
 
-void mp4ff_track_add(mp4ff_t *f)
+static void mp4ff_track_add(mp4ff_t *f)
 {
     f->total_tracks++;
+
+    if (f->total_tracks > MAX_TRACKS)
+    {
+        f->total_tracks = 0;
+        f->error++;
+        return;
+    }
 
     f->track[f->total_tracks - 1] = malloc(sizeof(mp4ff_track_t));
 
@@ -184,6 +204,7 @@ int32_t parse_atoms(mp4ff_t *f,int meta_only)
     uint8_t header_size = 0;
 
     f->file_size = 0;
+    f->stream->read_error = 0;
 
     while ((size = mp4ff_atom_read_header(f, &atom_type, &header_size)) != 0)
     {
@@ -194,7 +215,7 @@ int32_t parse_atoms(mp4ff_t *f,int meta_only)
         {
             /* moov atom is before mdat, we can stop reading when mdat is encountered */
             /* file position will stay at beginning of mdat data */
-            /* break; */
+//            break;
         }
 
         if (atom_type == ATOM_MOOV && size > header_size)
@@ -351,7 +372,7 @@ int32_t mp4ff_get_sample_duration(const mp4ff_t *f, const int32_t track, const i
 int64_t mp4ff_get_sample_position(const mp4ff_t *f, const int32_t track, const int32_t sample)
 {
     int32_t i, co = 0;
-    int64_t acc = 0;
+	int64_t acc = 0;
 
     for (i = 0; i < f->track[track]->stts_entry_count; i++)
     {

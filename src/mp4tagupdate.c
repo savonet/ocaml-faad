@@ -4,7 +4,7 @@
 
 #ifdef USE_TAGGING
 
-uint32_t fix_byte_order_32(uint32_t src)
+static uint32_t fix_byte_order_32(uint32_t src)
 {
     uint32_t result;
     uint32_t a, b, c, d;
@@ -20,7 +20,7 @@ uint32_t fix_byte_order_32(uint32_t src)
     return (uint32_t)result;
 }
 
-uint16_t fix_byte_order_16(uint16_t src)
+static uint16_t fix_byte_order_16(uint16_t src)
 {
     uint16_t result;
     uint16_t a, b;
@@ -143,7 +143,7 @@ unsigned membuffer_transfer_from_file(membuffer * buf,mp4ff_t * src,unsigned byt
 	bufptr = membuffer_get_ptr(buf);
 	if (bufptr==0) return 0;
 	
-	if ((unsigned)mp4ff_read_data(src,(uint8_t *)bufptr + oldsize,bytes)!=bytes)
+	if ((unsigned)mp4ff_read_data(src,(char*)bufptr + oldsize,bytes)!=bytes)
 	{
 		membuffer_set_error(buf);
 		return 0;
@@ -204,8 +204,6 @@ typedef struct
 } mp4ff_metadata_t;
 #endif
 
-#define       COPYRIGHT_SYMBOL        ((int8_t)0xA9)
-
 typedef struct
 {
 	const char * atom;
@@ -215,18 +213,20 @@ typedef struct
 static stdmeta_entry stdmetas[] = 
 {
 	{"\xA9" "nam","title"},
-	{"xA9" "ART","artist"},
-	{"xA9" "wrt","writer"},
-	{"xA9" "alb","album"},
-	{"xA9" "day","date"},
-	{"xA9" "too","tool"},
-	{"xA9" "cmt","comment"},
-//	{"xA9" "gen","genre"},
+	{"\xA9" "ART","artist"},
+	{"\xA9" "wrt","writer"},
+	{"\xA9" "alb","album"},
+	{"\xA9" "day","date"},
+	{"\xA9" "too","tool"},
+	{"\xA9" "cmt","comment"},
+//	{"\xA9" "gen","genre"},
 	{"cpil","compilation"},
 //	{"trkn","track"},
 //	{"disk","disc"},
 //	{"gnre","genre"},
 	{"covr","cover"},
+	/* added by AJS */
+	{"aART","album_artist"},
 };
 
 
@@ -267,11 +267,20 @@ static void membuffer_write_int16_tag(membuffer * buf,const char * name,uint16_t
 
 static void membuffer_write_std_tag(membuffer * buf,const char * name,const char * value)
 {
+	/* added by AJS */
+	uint32_t flags = 1;
+
+	/* special check for compilation flag */
+	if ( strcmp(name, "cpil") == 0)
+	{
+		flags = 21;
+	}
+
 	membuffer_write_int32(buf,8 /*atom header*/ + 8 /*data atom header*/ + 8 /*flags + reserved*/ + strlen(value) );
 	membuffer_write_atom_name(buf,name);
 	membuffer_write_int32(buf,8 /*data atom header*/ + 8 /*flags + reserved*/ + strlen(value));
 	membuffer_write_atom_name(buf,"data");
-	membuffer_write_int32(buf,1);//flags
+	membuffer_write_int32(buf,flags);//flags
 	membuffer_write_int32(buf,0);//reserved
 	membuffer_write_data(buf,value,strlen(value));
 }
@@ -356,7 +365,7 @@ static uint32_t create_ilst(const mp4ff_metadata_t * data,void ** out_buffer,uin
 		{
 			uint32_t index = mp4ff_meta_genre_to_index(genre_ptr);
 			if (index==0)
-				membuffer_write_std_tag(buf,"xA9" "gen",genre_ptr);
+				membuffer_write_std_tag(buf,"©gen",genre_ptr);
 			else
 				membuffer_write_int16_tag(buf,"gnre",(uint16_t)index);
 		}
@@ -400,7 +409,7 @@ static uint32_t find_atom(mp4ff_t * f,uint64_t base,uint32_t size,const char * n
 	uint64_t atom_offset = base;
 	for(;;)
 	{
-		uint8_t atom_name[4];
+		char atom_name[4];
 		uint32_t atom_size;
 
 		mp4ff_set_position(f,atom_offset);
@@ -620,7 +629,7 @@ int32_t mp4ff_meta_update(mp4ff_callback_t *f,const mp4ff_metadata_t * data)
     /* copy moov atom to end of the file */
     if (ff->last_atom != ATOM_MOOV)
     {
-        uint8_t *free_data = (uint8_t *)"free";
+        char *free_data = "free";
 
         /* rename old moov to free */
         mp4ff_set_position(ff, ff->moov_offset + 4);
@@ -628,14 +637,14 @@ int32_t mp4ff_meta_update(mp4ff_callback_t *f,const mp4ff_metadata_t * data)
 	
         mp4ff_set_position(ff, ff->file_size);
 		mp4ff_write_int32(ff,new_moov_size + 8);
-		mp4ff_write_data(ff,(uint8_t *)"moov",4);
+		mp4ff_write_data(ff,"moov",4);
 		mp4ff_write_data(ff, new_moov_data, new_moov_size);
     }
 	else
 	{
         mp4ff_set_position(ff, ff->moov_offset);
 		mp4ff_write_int32(ff,new_moov_size + 8);
-		mp4ff_write_data(ff,(uint8_t *)"moov",4);
+		mp4ff_write_data(ff,"moov",4);
 		mp4ff_write_data(ff, new_moov_data, new_moov_size);
 	}
 

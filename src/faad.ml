@@ -35,9 +35,9 @@ let min_bytes_per_channel = min_bytes_per_channel ()
 
 external create : unit -> t = "ocaml_faad_open"
 
-external init : t -> string -> int -> int -> int * int * int = "ocaml_faad_init"
+external init : t -> bytes -> int -> int -> int * int * int = "ocaml_faad_init"
 
-external decode : t -> string -> int -> int -> int * (float array array) = "ocaml_faad_decode"
+external decode : t -> bytes -> int -> int -> int * (float array array) = "ocaml_faad_decode"
 
 external post_sync_reset : t -> unit = "ocaml_faad_post_seek_reset"
 
@@ -69,7 +69,7 @@ struct
     assert (String.length s >= 8);
     s.[4] = 'f' && s.[5] = 't' && s.[6] = 'y' && s.[7] = 'p'
 
-  external open_read : bool -> (int -> (string * int * int)) -> (string -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
+  external open_read : bool -> (int -> (bytes * int * int)) -> (bytes -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
 
   external open_read_fd : bool -> Unix.file_descr -> t = "ocaml_faad_mp4_open_read_fd"
 

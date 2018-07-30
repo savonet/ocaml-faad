@@ -68,7 +68,7 @@ let () =
   let outbuf = ref "" in
   let fill_out channels a =
     let tmplen = Array.length a.(0) in
-    let tmp = String.create (tmplen * channels * 2) in
+    let tmp = Bytes.create (tmplen * channels * 2) in
     for i = 0 to tmplen - 1 do
       for c = 0 to channels - 1 do
         let n = a.(c).(i) *. 32767. in
@@ -77,7 +77,7 @@ let () =
         tmp.[2 * (i * channels + c) + 1] <- char_of_int ((n lsr 8) land 0xff)
       done
     done;
-    outbuf := !outbuf ^ tmp
+    outbuf := !outbuf ^ (Bytes.to_string tmp)
   in
 
   let decode_mp4 () =
@@ -107,7 +107,7 @@ let () =
     let aacbuf = String.create buflen in
 
     let fill_in () =
-      String.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);
+      Bytes.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);
       while !consumed <> 0 do
         let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
         if n = 0 then raise End_of_file;
@@ -123,7 +123,7 @@ let () =
     try
       while true do
         fill_in ();
-        if aacbuf.[0] <> '\255' then failwith "Invalid data";
+        if Bytes.get aacbuf 0 <> '\255' then failwith "Invalid data";
         let c, a = Faad.decode dec aacbuf 0 buflen in
         consumed := c;
         fill_out a
