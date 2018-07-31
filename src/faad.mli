@@ -43,13 +43,13 @@ val create : unit -> t
   * in [buf] starting at offset [ofs]. It returns the offset (number of bytes to
   * skip), the samplerate and the number of channels of the stream. This function
   * should be used for AAC data. *)
-val init : t -> bytes -> int -> int -> int * int * int
+val init : t -> Bytes.t -> int -> int -> int * int * int
 
 (** [decode dec buf ofs len] decodes at most [len] bytes of data in [buf]
   * starting at offset [ofs]. It returns the number of bytes actually decoded
   * and the decoded data (non-interleaved).
   *)
-val decode : t -> bytes -> int -> int -> int * (float array array)
+val decode : t -> Bytes.t -> int -> int -> int * (float array array)
 
 val post_sync_reset : t -> unit
 
@@ -73,10 +73,10 @@ sig
   val is_mp4 : string -> bool
 
   (** Open an MP4 file. *)
-  val openfile : ?write:(bytes -> int) -> 
+  val openfile : ?write:(Bytes.t -> int) -> 
                  ?seek:(int -> int) -> 
                  ?trunc:(unit -> int) -> 
-                 (int -> (bytes * int * int)) -> t
+                 (int -> (Bytes.t * int * int)) -> t
 
   val openfile_fd : Unix.file_descr -> t
 
