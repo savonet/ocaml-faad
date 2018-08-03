@@ -1,6 +1,7 @@
 0.4.0 ()
 =====
 * Updated mp4ff code, removed drms code (consistent with VLC)
+* Cleanup GC-related code.
 
 0.3.3 (03-08-2015)
 =====

@@ -33,6 +33,7 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/signals.h>
+#include <caml/threads.h>
 #include <caml/unixsupport.h>
 
 #include <sys/types.h>
@@ -147,9 +148,9 @@ CAMLprim value ocaml_faad_decode(value _dh, value _inbuf, value _inbufofs, value
 
   NeAACDecHandle dh = Dec_val(_dh);
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   data = NeAACDecDecode(dh, &frameInfo, inbuf, inbuflen);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   free(inbuf);
 
@@ -198,13 +199,13 @@ static void finalize_mp4(value e)
   if (mp->ff)
     mp4ff_close(mp->ff);
   if (mp->read_cb)
-    caml_remove_global_root(&mp->read_cb);
+    caml_remove_generational_global_root(&mp->read_cb);
   if (mp->write_cb)
-    caml_remove_global_root(&mp->write_cb);
+    caml_remove_generational_global_root(&mp->write_cb);
   if (mp->seek_cb)
-    caml_remove_global_root(&mp->seek_cb);
+    caml_remove_generational_global_root(&mp->seek_cb);
   if (mp->trunc_cb)
-    caml_remove_global_root(&mp->trunc_cb);
+    caml_remove_generational_global_root(&mp->trunc_cb);
 
   free(mp);
 }
@@ -229,14 +230,15 @@ static uint32_t read_cb(void *user_data, void *buffer, uint32_t length)
     return read(mp->fd, buffer, length);
   else
   {
-    caml_leave_blocking_section();
+    caml_acquire_runtime_system();
     ans = caml_callback(mp->read_cb, Val_int(length));
-    caml_enter_blocking_section();
 
     ofs = Int_val(Field(ans, 1));
     len = Int_val(Field(ans, 2));
     ans = Field(ans, 0);
     memcpy(buffer, String_val(ans)+ofs, len);
+
+    caml_release_runtime_system();
 
     return len;
   }
@@ -262,11 +264,10 @@ static uint32_t seek_cb(void *user_data, uint64_t position)
     return lseek(mp->fd, position, SEEK_SET)!=-1?0:-1;
   else
   {
-    caml_leave_blocking_section();
+    caml_acquire_runtime_system();
     ans = caml_callback(mp->seek_cb, Val_int(position));
-    caml_enter_blocking_section();
-
     pos = Int_val(ans);
+    caml_release_runtime_system();
 
     return pos;
   }
@@ -288,48 +289,48 @@ CAMLprim value ocaml_faad_mp4_open_read(value metaonly, value read, value write,
   mp->fd = -1;
   mp->ff_cb.read = read_cb;
   mp->read_cb = read;
-  caml_register_global_root(&mp->read_cb);
+  caml_register_generational_global_root(&mp->read_cb);
   if (Is_block(write))
   {
     mp->ff_cb.write = write_cb;
     mp->write_cb =  Field(write, 0);
-    caml_register_global_root(&mp->write_cb);
+    caml_register_generational_global_root(&mp->write_cb);
   }
   else
   {
     mp->ff_cb.write = NULL;
-    mp->write_cb = 0;
+    mp->write_cb = (value)NULL;
   }
   if (Is_block(seek))
   {
     mp->ff_cb.seek = seek_cb;
     mp->seek_cb = Field(seek, 0);
-    caml_register_global_root(&mp->seek_cb);
+    caml_register_generational_global_root(&mp->seek_cb);
   }
   else
   {
     mp->ff_cb.seek = NULL;
-    mp->seek_cb = 0;
+    mp->seek_cb = (value)NULL;
   }
   if (Is_block(trunc))
   {
     mp->ff_cb.truncate = trunc_cb;
     mp->trunc_cb = Field(trunc, 0);
-    caml_register_global_root(&mp->trunc_cb);
+    caml_register_generational_global_root(&mp->trunc_cb);
   }
   else
   {
     mp->ff_cb.truncate = NULL;
-    mp->trunc_cb = 0;
+    mp->trunc_cb = (value)NULL;
   }
   mp->ff_cb.user_data = mp;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   if(Bool_val(metaonly))
     mp->ff = mp4ff_open_read_metaonly(&mp->ff_cb);
   else
     mp->ff = mp4ff_open_read(&mp->ff_cb);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
   assert(mp->ff);
 
   ans = caml_alloc_custom(&mp4_ops, sizeof(mp4_t*), 1, 0);
@@ -352,21 +353,21 @@ CAMLprim value ocaml_faad_mp4_open_read_fd(value metaonly, value fd)
   mp4_t *mp = malloc(sizeof(mp4_t));
   mp->fd = GET_FD(fd);
   mp->ff_cb.read = read_cb;
-  mp->read_cb = 0;
+  mp->read_cb = (value)NULL;
   mp->ff_cb.write = write_cb;
-  mp->write_cb = 0;
+  mp->write_cb = (value)NULL;
   mp->ff_cb.seek = seek_cb;
-  mp->seek_cb = 0;
+  mp->seek_cb = (value)NULL;
   mp->ff_cb.truncate = trunc_cb;
-  mp->trunc_cb = 0;
+  mp->trunc_cb = (value)NULL;
   mp->ff_cb.user_data = mp;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   if(Bool_val(metaonly))
     mp->ff = mp4ff_open_read_metaonly(&mp->ff_cb);
   else
     mp->ff = mp4ff_open_read(&mp->ff_cb);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
   assert(mp->ff);
 
   ans = caml_alloc_custom(&mp4_ops, sizeof(mp4_t*), 1, 0);
@@ -381,9 +382,9 @@ CAMLprim value ocaml_faad_mp4_total_tracks(value m)
   mp4_t *mp = Mp4_val(m);
   int n;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   n = mp4ff_total_tracks(mp->ff);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   CAMLreturn(Val_int(n));
 }
@@ -396,9 +397,9 @@ CAMLprim value ocaml_faad_mp4_seek(value m, value track, value offset)
   mp4_t *mp = Mp4_val(m);
   int t = Int_val(track);
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   int sample = mp4ff_find_sample(mp->ff,t,(int64_t)(Int_val(offset)),&toskip);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   ret = caml_alloc_tuple(2);
   Field(ret,0) = Val_int(sample);
@@ -415,7 +416,7 @@ CAMLprim value ocaml_faad_mp4_find_aac_track(value m)
   int i, rc;
   int num_tracks;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   num_tracks = mp4ff_total_tracks(mp->ff);
   for (i = 0; i < num_tracks; i++) {
     unsigned char *buff = NULL;
@@ -430,12 +431,12 @@ CAMLprim value ocaml_faad_mp4_find_aac_track(value m)
       free(buff);
       if (rc < 0)
         continue;
-      caml_leave_blocking_section();
+      caml_acquire_runtime_system();
       CAMLreturn(Val_int(i));
     }
   }
 
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
   caml_raise_constant(*caml_named_value("ocaml_faad_exn_failed"));
 }
 
@@ -453,10 +454,10 @@ CAMLprim value ocaml_faad_mp4_init(value m, value dh, value track)
   unsigned char *mp4_buffer = NULL;
   unsigned int mp4_buffer_size = 0;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   mp4ff_get_decoder_config(mp->ff, t, &mp4_buffer, &mp4_buffer_size);
   ret = NeAACDecInit2(dec, mp4_buffer, mp4_buffer_size, &samplerate, &channels);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   free(mp4_buffer);
   check_err(ret);
@@ -475,9 +476,9 @@ CAMLprim value ocaml_faad_mp4_num_samples(value m, value track)
   int t = Int_val(track);
   int ans;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   ans = mp4ff_num_samples(mp->ff, t);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   CAMLreturn(Val_int(ans));
 }
@@ -493,9 +494,9 @@ CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
   unsigned int buflen = 0;
   int ret;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   ret = mp4ff_read_sample(mp->ff, t, s, &buf, &buflen);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
   check_err(ret);
 
   ans = caml_alloc_string(buflen);
@@ -520,15 +521,15 @@ CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value d
   float *data;
   int c, i, ret;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   ret = mp4ff_read_sample(mp->ff, t, s, &inbuf, &inbuflen);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   check_err(ret);
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   data = NeAACDecDecode(dec, &frameInfo, inbuf, inbuflen);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   free(inbuf);
 
@@ -554,9 +555,9 @@ CAMLprim value ocaml_faad_mp4_metadata(value m)
   int i, n;
   char *tag, *item;
 
-  caml_enter_blocking_section();
+  caml_release_runtime_system();
   n = mp4ff_meta_get_num_items(mp->ff);
-  caml_leave_blocking_section();
+  caml_acquire_runtime_system();
 
   ans = caml_alloc_tuple(n);
   for (i = 0; i < n; i++)
@@ -564,9 +565,9 @@ CAMLprim value ocaml_faad_mp4_metadata(value m)
     tag = NULL;
     item = NULL;
 
-    caml_enter_blocking_section();
+    caml_release_runtime_system();
     mp4ff_meta_get_by_index(mp->ff, i, &item, &tag);
-    caml_leave_blocking_section();
+    caml_acquire_runtime_system();
 
     assert(item && tag);
     v = caml_alloc_tuple(2);
