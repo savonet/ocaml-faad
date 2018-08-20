@@ -30,6 +30,7 @@ SOURCES = faad.mli faad.ml faad_stubs.c mp4atom.c mp4ff.c  mp4meta.c  \
 RESULT = faad
 OCAMLDOCFLAGS = -stars
 LIBINSTALL_FILES = $(wildcard *.mli *.cmi *.cma *.cmxa *.cmx *.a *.so)
+INCDIRS = @INC@
 LDFLAGS = @LDFLAGS@
 ACLIBS = @LIBS@
 CLIBS = $(ACLIBS:-l%=%)
