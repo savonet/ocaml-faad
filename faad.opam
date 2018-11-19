@@ -1,25 +1,30 @@
-opam-version: "1.2"
+opam-version: "2.0"
 version: "dev"
 maintainer: "Romain Beauxis <toots@rastageeks.org>"
 authors: "The Savonet Team <savonet-users@lists.sourceforge.net>"
 homepage: "https://github.com/savonet/ocaml-faad"
+bug-reports: "https://github.com/savonet/ocaml-faad/issues"
+depends: ["ocaml" "ocamlfind"]
+flags: light-uninstall
 build: [
   ["./bootstrap"]
-  ["./configure" "--prefix" prefix] { os != "darwin" }
-  ["./configure" "CFLAGS=-I/usr/local/include" "LDFLAGS=-L/usr/local/lib" "OCAMLFLAGS=-ccopt -I/usr/local/include -cclib -L/usr/local/lib" "--prefix" prefix] { os = "darwin" }
+  ["./configure" "--prefix" prefix] {os != "macos"}
+  [
+    "./configure"
+    "CFLAGS=-I/usr/local/include"
+    "LDFLAGS=-L/usr/local/lib"
+    "OCAMLFLAGS=-ccopt -I/usr/local/include -cclib -L/usr/local/lib"
+    "--prefix"
+    prefix
+  ] {os = "macos"}
   [make "clean"]
   [make]
 ]
-install: [
-  [make "install"]
-]
+install: [make "install"]
 remove: ["ocamlfind" "remove" "faad"]
-depends: ["ocamlfind"]
 depexts: [
-  [["debian"] ["libfaad-dev"]]
-  [["ubuntu"] ["libfaad-dev"]]
-  [["osx" "homebrew"] ["faad2"]]
+  ["libfaad-dev"] {os-distribution = "debian"}
+  ["libfaad-dev"] {os-distribution = "ubuntu"}
+  ["faad2"] {os = "macos" & os-distribution = "homebrew"}
 ]
-
-bug-reports: "https://github.com/savonet/ocaml-faad/issues"
-dev-repo: "https://github.com/savonet/ocaml-faad.git"
+dev-repo: "git+https://github.com/savonet/ocaml-faad.git"
