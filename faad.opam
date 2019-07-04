@@ -1,13 +1,17 @@
 opam-version: "2.0"
-version: "dev"
+name: "faad"
+version: "0.4.0"
 maintainer: "Romain Beauxis <toots@rastageeks.org>"
 authors: "The Savonet Team <savonet-users@lists.sourceforge.net>"
 homepage: "https://github.com/savonet/ocaml-faad"
 bug-reports: "https://github.com/savonet/ocaml-faad/issues"
-depends: ["ocaml" "ocamlfind"]
-flags: light-uninstall
+depends: [
+  "ocaml"
+  "ocamlfind" {build}
+  "base-bytes"
+]
 build: [
-  ["./bootstrap"]
+  ["./bootstrap"] {pinned}
   ["./configure" "--prefix" prefix] {os != "macos"}
   [
     "./configure"
@@ -17,14 +21,20 @@ build: [
     "--prefix"
     prefix
   ] {os = "macos"}
-  [make "clean"]
+  [make "clean"] {pinned}
   [make]
 ]
 install: [make "install"]
-remove: ["ocamlfind" "remove" "faad"]
 depexts: [
+  ["faad2-dev"] {os-distribution = "alpine"}
+  ["faad2"] {os-distribution = "arch"}
+  ["faad2-devel"] {os-distribution = "centos"}
+  ["faad2-devel"] {os-distribution = "fedora"}
+  ["faad2-devel"] {os-family = "suse"}
   ["libfaad-dev"] {os-distribution = "debian"}
   ["libfaad-dev"] {os-distribution = "ubuntu"}
   ["faad2"] {os = "macos" & os-distribution = "homebrew"}
 ]
 dev-repo: "git+https://github.com/savonet/ocaml-faad.git"
+synopsis:
+  "Bindings for the faad library which provides functions for decoding AAC audio files"
