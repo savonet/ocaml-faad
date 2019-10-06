@@ -61,7 +61,7 @@ let () =
     );
 
   let buflen = 1024 in
-  let buf = String.create buflen in
+  let buf = Bytes.create buflen in
   let f = Unix.openfile !src [Unix.O_RDONLY] 0o400 in
   let dec = Faad.create () in
 
@@ -73,8 +73,8 @@ let () =
       for c = 0 to channels - 1 do
         let n = a.(c).(i) *. 32767. in
         let n = int_of_float n in
-        tmp.[2 * (i * channels + c)] <- char_of_int (n land 0xff);
-        tmp.[2 * (i * channels + c) + 1] <- char_of_int ((n lsr 8) land 0xff)
+        Bytes.set tmp (2 * (i * channels + c)) (char_of_int (n land 0xff));
+        Bytes.set tmp (2 * (i * channels + c) + 1) (char_of_int ((n lsr 8) land 0xff));
       done
     done;
     outbuf := !outbuf ^ (Bytes.to_string tmp)
@@ -104,7 +104,7 @@ let () =
     let offset, samplerate, channels = Faad.init dec buf 0 len in
     let buflen  = Faad.min_bytes_per_channel * channels in
     let consumed = ref buflen in
-    let aacbuf = String.create buflen in
+    let aacbuf = Bytes.create buflen in
 
     let fill_in () =
       Bytes.blit aacbuf !consumed aacbuf 0 (buflen - !consumed);

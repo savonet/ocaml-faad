@@ -224,19 +224,31 @@ static uint32_t read_cb(void *user_data, void *buffer, uint32_t length)
 {
   mp4_t *mp = (mp4_t*)user_data;
   value ans;
-  int ofs, len;
+  int len;
+  value tmp;
 
   if (mp->fd != -1)
     return read(mp->fd, buffer, length);
   else
   {
     caml_acquire_runtime_system();
-    ans = caml_callback(mp->read_cb, Val_int(length));
 
-    ofs = Int_val(Field(ans, 1));
-    len = Int_val(Field(ans, 2));
-    ans = Field(ans, 0);
-    memcpy(buffer, String_val(ans)+ofs, len);
+    tmp = caml_alloc_string(length);
+    caml_register_generational_global_root(&tmp);
+    
+    ans = caml_callback3_exn(mp->read_cb, tmp, Val_int(0), Val_int(length));
+
+    if (Is_exception_result(ans)) {
+      ans = Extract_exception(ans);
+      caml_remove_generational_global_root(&tmp);
+      caml_raise(ans);
+    }
+
+    len = Int_val(ans);
+
+    if (len > 0) memcpy(buffer, String_val(tmp), len);
+
+    caml_remove_generational_global_root(&tmp);
 
     caml_release_runtime_system();
 
