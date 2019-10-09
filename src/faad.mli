@@ -69,14 +69,16 @@ sig
   (** A sample number. *)
   type sample = int
 
+  (** Data read. Same signature as [Unix.read]. *)
+  type read = bytes -> int -> int -> int
+
   (** Detect whether the file is an MP4 given at least 8 bytes of its header. *)
   val is_mp4 : string -> bool
 
   (** Open an MP4 file. *)
   val openfile : ?write:(Bytes.t -> int) -> 
                  ?seek:(int -> int) -> 
-                 ?trunc:(unit -> int) -> 
-                 (int -> (Bytes.t * int * int)) -> t
+                 ?trunc:(unit -> int) -> read -> t
 
   val openfile_fd : Unix.file_descr -> t
 

@@ -65,11 +65,13 @@ struct
 
   type sample = int
 
+  type read = bytes -> int -> int -> int
+
   let is_mp4 s =
     assert (String.length s >= 8);
     s.[4] = 'f' && s.[5] = 't' && s.[6] = 'y' && s.[7] = 'p'
 
-  external open_read : bool -> (int -> (Bytes.t * int * int)) -> (Bytes.t -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
+  external open_read : bool -> read -> (Bytes.t -> int) option -> (int -> int) option -> (unit -> int) option -> t = "ocaml_faad_mp4_open_read"
 
   external open_read_fd : bool -> Unix.file_descr -> t = "ocaml_faad_mp4_open_read_fd"
 
