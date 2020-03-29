@@ -29,8 +29,6 @@ let bufsize = 16 * 1024
 let src = ref ""
 let dst = ref ""
 
-open Unix
-
 let output_int chan n =
   output_char chan (char_of_int ((n lsr 0) land 0xff));
   output_char chan (char_of_int ((n lsr 8) land 0xff));

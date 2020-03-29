@@ -1,6 +1,7 @@
 0.5.0 (unreleased)
 =====
 * Convert to Unix.read style API.
+* Converted to dune for building.
 
 0.4.0 (18-08-2018)
 =====

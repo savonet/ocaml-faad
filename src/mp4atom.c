@@ -29,18 +29,13 @@
 **/
 
 #include <stdlib.h>
-#ifndef _WIN32
-#include "config.h"
-#else
-#include <tchar.h>
-#include <windows.h>
+#include <string.h>
+
+#ifdef _WIN32
+#  include <tchar.h>
+#  include <windows.h>
 #endif
-#ifdef HAVE_GETPWUID
-#    include <pwd.h>
-#endif
-#ifdef HAVE_STRING_H
-#    include <string.h>
-#endif
+
 #include "mp4ffint.h"
 
 #define       COPYRIGHT_SYMBOL        ((int8_t)0xA9)
