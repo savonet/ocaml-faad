@@ -25,7 +25,6 @@
   *)
 
 let bufsize = 16 * 1024
-
 let src = ref ""
 let dst = ref ""
 
@@ -42,21 +41,20 @@ let output_short chan n =
 let usage = "usage: aac2wav [options] source destination"
 
 let () =
-  Arg.parse
-    []
-    (
-      let pnum = ref (-1) in
-      (fun s -> incr pnum; match !pnum with
-      | 0 -> src := s
-      | 1 -> dst := s
-      | _ -> Printf.eprintf "Error: too many arguments\n"; exit 1
-      )
-    ) usage;
-  if !src = "" || !dst = "" then
-    (
-      Printf.printf "%s\n" usage;
-      exit 1
-    );
+  Arg.parse []
+    (let pnum = ref (-1) in
+     fun s ->
+       incr pnum;
+       match !pnum with
+         | 0 -> src := s
+         | 1 -> dst := s
+         | _ ->
+             Printf.eprintf "Error: too many arguments\n";
+             exit 1)
+    usage;
+  if !src = "" || !dst = "" then (
+    Printf.printf "%s\n" usage;
+    exit 1);
 
   let buflen = 1024 in
   let buf = Bytes.create buflen in
@@ -71,11 +69,13 @@ let () =
       for c = 0 to channels - 1 do
         let n = a.(c).(i) *. 32767. in
         let n = int_of_float n in
-        Bytes.set tmp (2 * (i * channels + c)) (char_of_int (n land 0xff));
-        Bytes.set tmp (2 * (i * channels + c) + 1) (char_of_int ((n lsr 8) land 0xff));
+        Bytes.set tmp (2 * ((i * channels) + c)) (char_of_int (n land 0xff));
+        Bytes.set tmp
+          ((2 * ((i * channels) + c)) + 1)
+          (char_of_int ((n lsr 8) land 0xff))
       done
     done;
-    outbuf := !outbuf ^ (Bytes.to_string tmp)
+    outbuf := !outbuf ^ Bytes.to_string tmp
   in
 
   let decode_mp4 () =
@@ -85,22 +85,25 @@ let () =
     let fill_out = fill_out channels in
     let samples = Faad.Mp4.samples mp4 track in
     Printf.printf "Input file: %d channels at %d Hz.\n%!" channels samplerate;
-    Array.iter (fun (i,t) -> Printf.printf "%s: %s\n%!" i t) (Faad.Mp4.metadata mp4);
+    Array.iter
+      (fun (i, t) -> Printf.printf "%s: %s\n%!" i t)
+      (Faad.Mp4.metadata mp4);
     Printf.printf "%d tracks (AAC track: %d).\n%!" (Faad.Mp4.tracks mp4) track;
     Printf.printf "%d samples.\n" samples;
     for i = 0 to samples - 1 do
-      Printf.printf "Decoding sample: %d / %d (%d bytes).\r%!" i samples (String.length !outbuf);
+      Printf.printf "Decoding sample: %d / %d (%d bytes).\r%!" i samples
+        (String.length !outbuf);
       let a = Faad.Mp4.decode mp4 track i dec in
       fill_out a
     done;
     Printf.printf "\n%!";
-    channels, samplerate, !outbuf
+    (channels, samplerate, !outbuf)
   in
 
   let decode_aac () =
     let len = Unix.read f buf 0 buflen in
     let offset, samplerate, channels = Faad.init dec buf 0 len in
-    let buflen  = Faad.min_bytes_per_channel * channels in
+    let buflen = Faad.min_bytes_per_channel * channels in
     let consumed = ref buflen in
     let aacbuf = Bytes.create buflen in
 
@@ -109,7 +112,7 @@ let () =
       while !consumed <> 0 do
         let n = Unix.read f aacbuf (buflen - !consumed) !consumed in
         if n = 0 then raise End_of_file;
-        consumed := !consumed - n;
+        consumed := !consumed - n
       done
     in
 
@@ -126,21 +129,18 @@ let () =
         consumed := c;
         fill_out a
       done;
-      channels, samplerate, !outbuf
+      (channels, samplerate, !outbuf)
     with
-    | End_of_file
-    | Faad.Failed ->
-      channels, samplerate, !outbuf
-    | Faad.Error n as e ->
-      Printf.printf "Faad error %d: %s\n%!" n (Faad.error_message n);
-      raise e
+      | End_of_file | Faad.Failed -> (channels, samplerate, !outbuf)
+      | Faad.Error n as e ->
+          Printf.printf "Faad error %d: %s\n%!" n (Faad.error_message n);
+          raise e
   in
 
   let channels, samplerate, outbuf =
-    if Filename.check_suffix !src ".aac" || Filename.check_suffix !src ".AAC" then
-      decode_aac ()
-    else
-      decode_mp4 ()
+    if Filename.check_suffix !src ".aac" || Filename.check_suffix !src ".AAC"
+    then decode_aac ()
+    else decode_mp4 ()
   in
 
   (* Do the wav stuff. *)
@@ -151,12 +151,18 @@ let () =
   output_string oc "WAVE";
   output_string oc "fmt ";
   output_int oc 16;
-  output_short oc 1; (* WAVE_FORMAT_PCM *)
-  output_short oc channels; (* channels *)
-  output_int oc samplerate; (* freq *)
-  output_int oc (samplerate * channels * 2); (* bytes / s *)
-  output_short oc (channels * 2); (* block alignment *)
-  output_short oc 16; (* bits per sample *)
+  output_short oc 1;
+  (* WAVE_FORMAT_PCM *)
+  output_short oc channels;
+  (* channels *)
+  output_int oc samplerate;
+  (* freq *)
+  output_int oc (samplerate * channels * 2);
+  (* bytes / s *)
+  output_short oc (channels * 2);
+  (* block alignment *)
+  output_short oc 16;
+  (* bits per sample *)
   output_string oc "data";
   output_int oc datalen;
   output_string oc outbuf;

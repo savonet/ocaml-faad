@@ -143,7 +143,7 @@ unsigned membuffer_transfer_from_file(membuffer * buf,mp4ff_t * src,unsigned byt
 	bufptr = membuffer_get_ptr(buf);
 	if (bufptr==0) return 0;
 	
-	if ((unsigned)mp4ff_read_data(src,(char*)bufptr + oldsize,bytes)!=bytes)
+	if ((unsigned)mp4ff_read_data(src,(int8_t *)bufptr + oldsize,bytes)!=bytes)
 	{
 		membuffer_set_error(buf);
 		return 0;
@@ -365,7 +365,7 @@ static uint32_t create_ilst(const mp4ff_metadata_t * data,void ** out_buffer,uin
 		{
 			uint32_t index = mp4ff_meta_genre_to_index(genre_ptr);
 			if (index==0)
-				membuffer_write_std_tag(buf,"©gen",genre_ptr);
+				membuffer_write_std_tag(buf,"\u0040gen",genre_ptr);
 			else
 				membuffer_write_int16_tag(buf,"gnre",(uint16_t)index);
 		}
@@ -417,7 +417,7 @@ static uint32_t find_atom(mp4ff_t * f,uint64_t base,uint32_t size,const char * n
 		if (remaining < 8) break;
 		atom_size = mp4ff_read_int32(f);
 		if (atom_size > remaining || atom_size < 8) break;
-		mp4ff_read_data(f,atom_name,4);
+		mp4ff_read_data(f,(int8_t *)atom_name,4);
 		
 		if (!memcmp(atom_name,name,4))
 		{
@@ -512,7 +512,7 @@ static uint32_t modify_moov(mp4ff_t * f,const mp4ff_metadata_t * data,void ** ou
 	uint32_t new_ilst_size;
 	void * new_ilst_buffer;
 	
-	uint8_t * p_out;
+	int8_t * p_out;
 	int32_t size_delta;
 	
 	
@@ -581,7 +581,7 @@ static uint32_t modify_moov(mp4ff_t * f,const mp4ff_metadata_t * data,void ** ou
 			return 0;
 		}
 
-		p_out = (uint8_t*)*out_buffer;
+		p_out = (int8_t*)*out_buffer;
 		
 		mp4ff_set_position(f,total_base);
 		mp4ff_read_data(f,p_out,(uint32_t)(udta_offset - total_base )); p_out += (uint32_t)(udta_offset - total_base );
@@ -633,18 +633,18 @@ int32_t mp4ff_meta_update(mp4ff_callback_t *f,const mp4ff_metadata_t * data)
 
         /* rename old moov to free */
         mp4ff_set_position(ff, ff->moov_offset + 4);
-        mp4ff_write_data(ff, free_data, 4);
+        mp4ff_write_data(ff, (int8_t *)free_data, 4);
 	
         mp4ff_set_position(ff, ff->file_size);
 		mp4ff_write_int32(ff,new_moov_size + 8);
-		mp4ff_write_data(ff,"moov",4);
+		mp4ff_write_data(ff,(int8_t *)"moov",4);
 		mp4ff_write_data(ff, new_moov_data, new_moov_size);
     }
 	else
 	{
         mp4ff_set_position(ff, ff->moov_offset);
 		mp4ff_write_int32(ff,new_moov_size + 8);
-		mp4ff_write_data(ff,"moov",4);
+		mp4ff_write_data(ff,(int8_t *)"moov",4);
 		mp4ff_write_data(ff, new_moov_data, new_moov_size);
 	}
 

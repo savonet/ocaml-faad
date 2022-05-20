@@ -1,25 +1,19 @@
 module C = Configurator.V1
 
-let faad_test_code = {|
-#include <neaacdec.h>
-
-int main()
-{
-  NeAACDecHandle hAac = NeAACDecOpen();
-  unsigned char input[1024];
-  size_t input_size = 0;
-  unsigned long samplerate;
-  unsigned char channels;
-
-  char err = NeAACDecInit(hAac, input, input_size, &samplerate, &channels);
-
-  return 0;
-}
-|}
-
 let () =
-  C.main ~name:"has_faad" (fun c ->
-    let has_faad = C.c_test c faad_test_code ~link_flags:["-lfaad -lm"] in
-
-    C.C_define.gen_header_file c ~fname:"config.h"
-      [ "HAS_FAAD", Switch has_faad ]);
+  C.main ~name:"faad2-pkg-config" (fun c ->
+      let default : C.Pkg_config.package_conf =
+        { libs = ["-lfaad2"]; cflags = [] }
+      in
+      let conf =
+        match C.Pkg_config.get c with
+          | None -> default
+          | Some pc -> (
+              match
+                C.Pkg_config.query_expr_err pc ~package:"faad2" ~expr:"mad"
+              with
+                | Error msg -> failwith msg
+                | Ok deps -> deps)
+      in
+      C.Flags.write_sexp "c_flags.sexp" conf.cflags;
+      C.Flags.write_sexp "c_library_flags.sexp" conf.libs)

@@ -220,7 +220,7 @@ int32_t mp4ff_get_sample_offset(const mp4ff_t *f, const int32_t track, const int
 int32_t mp4ff_find_sample(const mp4ff_t *f, const int32_t track, const int64_t offset,int32_t * toskip);
 
 int32_t mp4ff_read_sample(mp4ff_t *f, const int32_t track, const int32_t sample,
-                          uint8_t **audio_buffer,  uint32_t *bytes);
+                          int8_t **audio_buffer,  uint32_t *bytes);
 int32_t mp4ff_get_decoder_config(const mp4ff_t *f, const int32_t track,
                                  uint8_t** ppBuf, uint32_t* pBufSize);
 int32_t mp4ff_total_tracks(const mp4ff_t *f);

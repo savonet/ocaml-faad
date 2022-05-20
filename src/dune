@@ -4,18 +4,14 @@
  (synopsis "Ocaml bindings to libfaad")
  (foreign_stubs
   (language c)
-  (extra_deps config.h)
-  (names
-    faad_stubs
-    mp4atom
-    mp4ff
-    mp4meta
-    mp4sample
-    mp4tagupdate
-    mp4util)
-  (flags -DUSE_TAGGING))
- (c_library_flags "-lfaad -lm"))
+  (names faad_stubs mp4atom mp4ff mp4meta mp4sample mp4tagupdate mp4util)
+  (flags
+   -DUSE_TAGGING
+   (:include c_flags.sexp)))
+ (c_library_flags
+  (:include c_library_flags.sexp)))
 
 (rule
- (targets config.h)
- (action (run ./config/discover.exe)))
+ (targets c_flags.sexp c_library_flags.sexp)
+ (action
+  (run ./config/discover.exe)))

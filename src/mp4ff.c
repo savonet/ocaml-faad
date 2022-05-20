@@ -437,7 +437,7 @@ int32_t mp4ff_find_sample_use_offsets(const mp4ff_t *f, const int32_t track, con
 }
 
 int32_t mp4ff_read_sample(mp4ff_t *f, const int32_t track, const int32_t sample,
-                          uint8_t **audio_buffer,  uint32_t *bytes)
+                          int8_t **audio_buffer,  uint32_t *bytes)
 {
     int32_t result = 0;
 
@@ -445,7 +445,7 @@ int32_t mp4ff_read_sample(mp4ff_t *f, const int32_t track, const int32_t sample,
 
 	if (*bytes==0) return 0;
 
-    *audio_buffer = (uint8_t*)malloc(*bytes);
+    *audio_buffer = (int8_t*)malloc(*bytes);
 
     mp4ff_set_sample_position(f, track, sample);
 
@@ -475,7 +475,7 @@ int32_t mp4ff_read_sample_v2(mp4ff_t *f, const int track, const int sample,unsig
 	int32_t size = mp4ff_audio_frame_size(f,track,sample);
 	if (size<=0) return 0;
 	mp4ff_set_sample_position(f, track, sample);
-	result = mp4ff_read_data(f,buffer,size);
+	result = mp4ff_read_data(f,(int8_t *)buffer,size);
 
 #ifdef ITUNES_DRM
     if (f->track[track]->p_drms != NULL)

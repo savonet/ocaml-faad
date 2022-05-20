@@ -75,7 +75,7 @@ int32_t mp4ff_write_int32(mp4ff_t *f,const uint32_t data)
 
     result = (a<<24) | (b<<16) | (c<<8) | d;
 
-    return mp4ff_write_data(f,(uint8_t*)&result,sizeof(result));
+    return mp4ff_write_data(f,(int8_t*)&result,sizeof(result));
 }
 
 int32_t mp4ff_set_position(mp4ff_t *f, const int64_t position)
@@ -93,7 +93,7 @@ int64_t mp4ff_position(const mp4ff_t *f)
 
 uint64_t mp4ff_read_int64(mp4ff_t *f)
 {
-    uint8_t data[8];
+    int8_t data[8];
     uint64_t result = 0;
     int8_t i;
 
@@ -157,7 +157,7 @@ char * mp4ff_read_string(mp4ff_t * f,uint32_t length)
 	char * str = (char*)malloc(length + 1);
 	if (str!=0)
 	{
-		if ((uint32_t)mp4ff_read_data(f,str,length)!=length)
+		if ((uint32_t)mp4ff_read_data(f,(int8_t *)str,length)!=length)
 		{
 			free(str);
 			str = 0;
@@ -172,7 +172,7 @@ char * mp4ff_read_string(mp4ff_t * f,uint32_t length)
 
 uint8_t mp4ff_read_char(mp4ff_t *f)
 {
-    uint8_t output;
+    int8_t output;
     mp4ff_read_data(f, &output, 1);
     return output;
 }

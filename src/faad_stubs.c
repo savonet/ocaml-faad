@@ -502,7 +502,7 @@ CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
   mp4_t *mp = Mp4_val(m);
   int t = Int_val(track);
   int s = Int_val(sample);
-  unsigned char *buf = NULL;
+  int8_t *buf = NULL;
   unsigned int buflen = 0;
   int ret;
 
@@ -512,7 +512,7 @@ CAMLprim value ocaml_faad_mp4_read_sample(value m, value track, value sample)
   check_err(ret);
 
   ans = caml_alloc_string(buflen);
-  memcpy(String_val(ans), buf, buflen);
+  memcpy((void *)String_val(ans), buf, buflen);
   free(buf);
 
   CAMLreturn(ans);
@@ -528,7 +528,7 @@ CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value d
   int s = Int_val(sample);
   NeAACDecHandle dec = Dec_val(dh);
   NeAACDecFrameInfo frameInfo;
-  unsigned char *inbuf = NULL;
+  int8_t *inbuf = NULL;
   unsigned int inbuflen = 0;
   float *data;
   int c, i, ret;
@@ -540,7 +540,7 @@ CAMLprim value ocaml_faad_mp4_decode(value m, value track, value sample, value d
   check_err(ret);
 
   caml_release_runtime_system();
-  data = NeAACDecDecode(dec, &frameInfo, inbuf, inbuflen);
+  data = NeAACDecDecode(dec, &frameInfo, (uint8_t *)inbuf, inbuflen);
   caml_acquire_runtime_system();
 
   free(inbuf);

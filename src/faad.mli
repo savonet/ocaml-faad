@@ -28,6 +28,7 @@ type t
 
 (** An error occured... *)
 exception Error of int
+
 exception Failed
 
 (** Get the error message corresponding to a raised [Error]. *)
@@ -49,15 +50,14 @@ val init : t -> Bytes.t -> int -> int -> int * int * int
   * starting at offset [ofs]. It returns the number of bytes actually decoded
   * and the decoded data (non-interleaved).
   *)
-val decode : t -> Bytes.t -> int -> int -> int * (float array array)
+val decode : t -> Bytes.t -> int -> int -> int * float array array
 
 val post_sync_reset : t -> unit
 
 (** Heuristic guess of the offset of the begining of a frame. *)
 val find_frame : string -> int
 
-module Mp4 :
-sig
+module Mp4 : sig
   type decoder = t
 
   (** An MP4 reader. *)
@@ -76,9 +76,12 @@ sig
   val is_mp4 : string -> bool
 
   (** Open an MP4 file. *)
-  val openfile : ?write:(Bytes.t -> int) -> 
-                 ?seek:(int -> int) -> 
-                 ?trunc:(unit -> int) -> read -> t
+  val openfile :
+    ?write:(Bytes.t -> int) ->
+    ?seek:(int -> int) ->
+    ?trunc:(unit -> int) ->
+    read ->
+    t
 
   val openfile_fd : Unix.file_descr -> t
 
@@ -96,13 +99,10 @@ sig
     * [sample] is the new current (mp4) sample
     * and [toskip] is an amount of audio sample 
     * that should be skipped. *)
-  val seek : t -> track -> int -> int*int
+  val seek : t -> track -> int -> int * int
 
   val samples : t -> track -> int
-
   val read_sample : t -> track -> sample -> string
-
   val decode : t -> track -> sample -> decoder -> float array array
-
   val metadata : t -> (string * string) array
 end
