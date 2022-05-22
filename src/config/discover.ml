@@ -12,7 +12,7 @@ let () =
               match
                 C.Pkg_config.query_expr_err pc ~package:"faad2" ~expr:"faad2"
               with
-                | Error msg -> failwith msg
+                | Error _ -> default
                 | Ok deps -> deps)
       in
       C.Flags.write_sexp "c_flags.sexp" conf.cflags;
