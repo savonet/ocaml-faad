@@ -3,7 +3,7 @@ module C = Configurator.V1
 let () =
   C.main ~name:"faad2-pkg-config" (fun c ->
       let default : C.Pkg_config.package_conf =
-        { libs = ["-lfaad2"]; cflags = [] }
+        { libs = ["-lfaad"]; cflags = [] }
       in
       let conf =
         match C.Pkg_config.get c with

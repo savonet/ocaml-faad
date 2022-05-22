@@ -1,5 +1,5 @@
 (lang dune 2.8)
-(version 0.5.1)
+(version 0.5.2)
 (name faad)
 (source (github savonet/ocaml-faad))
 (license GPL-2.0)
