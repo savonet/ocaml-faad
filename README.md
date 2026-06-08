@@ -1,42 +1,35 @@
 # ocaml-faad
 
-This package contains an O'Caml interface for the AAC audio decoder, otherwise known as libfaad.
+> [!WARNING]
+> This repository is read-only. All changes must be made in
+> [savonet/liquidsoap](https://github.com/savonet/liquidsoap) under
+> `src/modules/synced/faad/` and will be mirrored here automatically.
+
+OCaml bindings for [libfaad](https://www.audiocoding.com/faad2.html), an AAC audio decoder.
 
 Please read the COPYING file before using this software.
 
-## Prerequisites:
+## Prerequisites
 
-- ocaml >= 3.0.6 (haven't tried earlier versions)
+- OCaml >= 4.14
+- libfaad2 (e.g. `apt install libfaad-dev` or `brew install faad2`)
+- dune >= 3.0
 
-- libfaad >= 2.5 (haven't tried earlier versions)
-
-- findlib >= 0.8.1 (haven't tried earlier versions)
-
-- dune >= 2.0
-
-## Compilation:
-
-```sh
-$ dune build
-```
-
-This should build both the native and the byte-code version of the
-extension library.
-
-## Installation:
+## Installation
 
 Via `opam`:
 
-```sh
+```
 $ opam install faad
 ```
 
-Via `dune` (for developers):
+## Building from source
 
-```sh
+```
+$ dune build
 $ dune install
 ```
 
-This should install the library file (using ocamlfind) in the
-appropriate place.
+## Contact
 
+savonet-users@lists.sourceforge.net
