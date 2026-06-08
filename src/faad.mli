@@ -26,7 +26,7 @@
 (** Internal state of a decoder. *)
 type t
 
-(** An error occured... *)
+(** An error occurred... *)
 exception Error of int
 
 exception Failed
@@ -34,27 +34,27 @@ exception Failed
 (** Get the error message corresponding to a raised [Error]. *)
 val error_message : int -> string
 
-(** A decode call can eat up to [min_bytes_per_channel] bytes per decoded channel,
-   so at least so much bytes per channel should be available in this stream. *)
+(** A decode call can eat up to [min_bytes_per_channel] bytes per decoded
+    channel, so at least so much bytes per channel should be available in this
+    stream. *)
 val min_bytes_per_channel : int
 
 val create : unit -> t
 
-(** [init dec buf ofs len] initializes a decoder given the [len] bytes of data
-  * in [buf] starting at offset [ofs]. It returns the offset (number of bytes to
-  * skip), the samplerate and the number of channels of the stream. This function
-  * should be used for AAC data. *)
+(** [init dec buf ofs len] initializes a decoder given the [len] bytes of data *
+    in [buf] starting at offset [ofs]. It returns the offset (number of bytes to
+    * skip), the samplerate and the number of channels of the stream. This
+    function * should be used for AAC data. *)
 val init : t -> Bytes.t -> int -> int -> int * int * int
 
-(** [decode dec buf ofs len] decodes at most [len] bytes of data in [buf]
-  * starting at offset [ofs]. It returns the number of bytes actually decoded
-  * and the decoded data (non-interleaved).
-  *)
+(** [decode dec buf ofs len] decodes at most [len] bytes of data in [buf] *
+    starting at offset [ofs]. It returns the number of bytes actually decoded *
+    and the decoded data (non-interleaved). *)
 val decode : t -> Bytes.t -> int -> int -> int * float array array
 
 val post_sync_reset : t -> unit
 
-(** Heuristic guess of the offset of the begining of a frame. *)
+(** Heuristic guess of the offset of the beginning of a frame. *)
 val find_frame : string -> int
 
 module Mp4 : sig
@@ -94,11 +94,9 @@ module Mp4 : sig
   (** Initialize a decoder. *)
   val init : t -> decoder -> track -> int * int
 
-  (** Seek to the given offset, in audio samples. 
-    * returns a pair [sample,toskip] where
-    * [sample] is the new current (mp4) sample
-    * and [toskip] is an amount of audio sample 
-    * that should be skipped. *)
+  (** Seek to the given offset, in audio samples. * returns a pair
+      [sample,toskip] where * [sample] is the new current (mp4) sample * and
+      [toskip] is an amount of audio sample * that should be skipped. *)
   val seek : t -> track -> int -> int * int
 
   val samples : t -> track -> int

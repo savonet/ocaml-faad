@@ -1,19 +1,19 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
 ** Copyright (C) 2003-2005 M. Bakker, Nero AG, http://www.nero.com
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-** 
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-** 
+**
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software 
+** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
@@ -35,15 +35,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #define MAX_TRACKS 1024
 #define TRACK_UNKNOWN 0
-#define TRACK_AUDIO   1
-#define TRACK_VIDEO   2
-#define TRACK_SYSTEM  3
-
+#define TRACK_AUDIO 1
+#define TRACK_VIDEO 2
+#define TRACK_SYSTEM 3
 
 #define SUBATOMIC 128
 
@@ -75,24 +74,24 @@ extern "C" {
 #define ATOM_IVIV 153
 #define ATOM_PRIV 154
 #define ATOM_USER 155
-#define ATOM_KEY  156
+#define ATOM_KEY 156
 
-#define ATOM_ALBUM_ARTIST	157
-#define ATOM_CONTENTGROUP   158
-#define ATOM_LYRICS         159
-#define ATOM_DESCRIPTION    160
-#define ATOM_NETWORK        161
-#define ATOM_SHOW           162
-#define ATOM_EPISODENAME    163
-#define ATOM_SORTTITLE      164
-#define ATOM_SORTALBUM      165
-#define ATOM_SORTARTIST     166
-#define ATOM_SORTALBUMARTIST    167
-#define ATOM_SORTWRITER     168
-#define ATOM_SORTSHOW       169
-#define ATOM_SEASON         170
-#define ATOM_EPISODE        171
-#define ATOM_PODCAST        172
+#define ATOM_ALBUM_ARTIST 157
+#define ATOM_CONTENTGROUP 158
+#define ATOM_LYRICS 159
+#define ATOM_DESCRIPTION 160
+#define ATOM_NETWORK 161
+#define ATOM_SHOW 162
+#define ATOM_EPISODENAME 163
+#define ATOM_SORTTITLE 164
+#define ATOM_SORTALBUM 165
+#define ATOM_SORTARTIST 166
+#define ATOM_SORTALBUMARTIST 167
+#define ATOM_SORTWRITER 168
+#define ATOM_SORTSHOW 169
+#define ATOM_SEASON 170
+#define ATOM_EPISODE 171
+#define ATOM_PODCAST 172
 
 #define ATOM_UNKNOWN 255
 #define ATOM_FREE ATOM_UNKNOWN
@@ -142,19 +141,23 @@ uint32_t mp4ff_read_int32(mp4ff_t *f);
 uint32_t mp4ff_read_int24(mp4ff_t *f);
 uint16_t mp4ff_read_int16(mp4ff_t *f);
 uint8_t mp4ff_read_char(mp4ff_t *f);
-int32_t mp4ff_write_int32(mp4ff_t *f,const uint32_t data);
+int32_t mp4ff_write_int32(mp4ff_t *f, const uint32_t data);
 uint32_t mp4ff_read_mp4_descr_length(mp4ff_t *f);
 int64_t mp4ff_position(const mp4ff_t *f);
 int32_t mp4ff_set_position(mp4ff_t *f, const int64_t position);
-int32_t mp4ff_truncate(mp4ff_t * f);
-char * mp4ff_read_string(mp4ff_t * f,uint32_t length);
+int32_t mp4ff_truncate(mp4ff_t *f);
+char *mp4ff_read_string(mp4ff_t *f, uint32_t length);
 
 /* mp4atom.c */
 static int32_t mp4ff_atom_get_size(const int8_t *data);
-static int32_t mp4ff_atom_compare(const int8_t a1, const int8_t b1, const int8_t c1, const int8_t d1,
-                                  const int8_t a2, const int8_t b2, const int8_t c2, const int8_t d2);
-static uint8_t mp4ff_atom_name_to_type(const int8_t a, const int8_t b, const int8_t c, const int8_t d);
-uint64_t mp4ff_atom_read_header(mp4ff_t *f, uint8_t *atom_type, uint8_t *header_size);
+static int32_t mp4ff_atom_compare(const int8_t a1, const int8_t b1,
+                                  const int8_t c1, const int8_t d1,
+                                  const int8_t a2, const int8_t b2,
+                                  const int8_t c2, const int8_t d2);
+static uint8_t mp4ff_atom_name_to_type(const int8_t a, const int8_t b,
+                                       const int8_t c, const int8_t d);
+uint64_t mp4ff_atom_read_header(mp4ff_t *f, uint8_t *atom_type,
+                                uint8_t *header_size);
 static int32_t mp4ff_read_stsz(mp4ff_t *f);
 static int32_t mp4ff_read_esds(mp4ff_t *f);
 static int32_t mp4ff_read_mp4a(mp4ff_t *f);
@@ -165,30 +168,42 @@ static int32_t mp4ff_read_stts(mp4ff_t *f);
 #ifdef USE_TAGGING
 static int32_t mp4ff_read_meta(mp4ff_t *f, const uint64_t size);
 #endif
-int32_t mp4ff_atom_read(mp4ff_t *f, const int32_t size, const uint8_t atom_type);
+int32_t mp4ff_atom_read(mp4ff_t *f, const int32_t size,
+                        const uint8_t atom_type);
 
 /* mp4sample.c */
-static int32_t mp4ff_chunk_of_sample(const mp4ff_t *f, const int32_t track, const int32_t sample,
+static int32_t mp4ff_chunk_of_sample(const mp4ff_t *f, const int32_t track,
+                                     const int32_t sample,
                                      int32_t *chunk_sample, int32_t *chunk);
-static int32_t mp4ff_chunk_to_offset(const mp4ff_t *f, const int32_t track, const int32_t chunk);
+static int32_t mp4ff_chunk_to_offset(const mp4ff_t *f, const int32_t track,
+                                     const int32_t chunk);
 static int32_t mp4ff_sample_range_size(const mp4ff_t *f, const int32_t track,
-                                       const int32_t chunk_sample, const int32_t sample);
-static int32_t mp4ff_sample_to_offset(const mp4ff_t *f, const int32_t track, const int32_t sample);
-int32_t mp4ff_audio_frame_size(const mp4ff_t *f, const int32_t track, const int32_t sample);
-int32_t mp4ff_set_sample_position(mp4ff_t *f, const int32_t track, const int32_t sample);
+                                       const int32_t chunk_sample,
+                                       const int32_t sample);
+static int32_t mp4ff_sample_to_offset(const mp4ff_t *f, const int32_t track,
+                                      const int32_t sample);
+int32_t mp4ff_audio_frame_size(const mp4ff_t *f, const int32_t track,
+                               const int32_t sample);
+int32_t mp4ff_set_sample_position(mp4ff_t *f, const int32_t track,
+                                  const int32_t sample);
 
 #ifdef USE_TAGGING
 /* mp4meta.c */
-static int32_t mp4ff_tag_add_field(mp4ff_metadata_t *tags, const char *item, const char *value, int32_t len);
-static int32_t mp4ff_tag_set_field(mp4ff_metadata_t *tags, const char *item, const char *value);
-static int32_t mp4ff_set_metadata_name(mp4ff_t *f, const uint8_t atom_type, char **name);
-static int32_t mp4ff_parse_tag(mp4ff_t *f, const uint8_t parent_atom_type, const int32_t size);
-static int32_t mp4ff_meta_find_by_name(const mp4ff_t *f, const char *item, char **value);
+static int32_t mp4ff_tag_add_field(mp4ff_metadata_t *tags, const char *item,
+                                   const char *value, int32_t len);
+static int32_t mp4ff_tag_set_field(mp4ff_metadata_t *tags, const char *item,
+                                   const char *value);
+static int32_t mp4ff_set_metadata_name(mp4ff_t *f, const uint8_t atom_type,
+                                       char **name);
+static int32_t mp4ff_parse_tag(mp4ff_t *f, const uint8_t parent_atom_type,
+                               const int32_t size);
+static int32_t mp4ff_meta_find_by_name(const mp4ff_t *f, const char *item,
+                                       char **value);
 int32_t mp4ff_parse_metadata(mp4ff_t *f, const int32_t size);
 int32_t mp4ff_tag_delete(mp4ff_metadata_t *tags);
 int32_t mp4ff_meta_get_num_items(const mp4ff_t *f);
-int32_t mp4ff_meta_get_by_index(const mp4ff_t *f, uint32_t index,
-                            char **item, char **value);
+int32_t mp4ff_meta_get_by_index(const mp4ff_t *f, uint32_t index, char **item,
+                                char **value);
 int32_t mp4ff_meta_get_title(const mp4ff_t *f, char **value);
 int32_t mp4ff_meta_get_artist(const mp4ff_t *f, char **value);
 int32_t mp4ff_meta_get_writer(const mp4ff_t *f, char **value);
@@ -210,26 +225,31 @@ mp4ff_t *mp4ff_open_read(mp4ff_callback_t *f);
 mp4ff_t *mp4ff_open_edit(mp4ff_callback_t *f);
 #endif
 void mp4ff_close(mp4ff_t *ff);
-//void mp4ff_track_add(mp4ff_t *f);
-int32_t parse_sub_atoms(mp4ff_t *f, const uint64_t total_size,int meta_only);
-int32_t parse_atoms(mp4ff_t *f,int meta_only);
+// void mp4ff_track_add(mp4ff_t *f);
+int32_t parse_sub_atoms(mp4ff_t *f, const uint64_t total_size, int meta_only);
+int32_t parse_atoms(mp4ff_t *f, int meta_only);
 
-int32_t mp4ff_get_sample_duration(const mp4ff_t *f, const int32_t track, const int32_t sample);
-int64_t mp4ff_get_sample_position(const mp4ff_t *f, const int32_t track, const int32_t sample);
-int32_t mp4ff_get_sample_offset(const mp4ff_t *f, const int32_t track, const int32_t sample);
-int32_t mp4ff_find_sample(const mp4ff_t *f, const int32_t track, const int64_t offset,int32_t * toskip);
+int32_t mp4ff_get_sample_duration(const mp4ff_t *f, const int32_t track,
+                                  const int32_t sample);
+int64_t mp4ff_get_sample_position(const mp4ff_t *f, const int32_t track,
+                                  const int32_t sample);
+int32_t mp4ff_get_sample_offset(const mp4ff_t *f, const int32_t track,
+                                const int32_t sample);
+int32_t mp4ff_find_sample(const mp4ff_t *f, const int32_t track,
+                          const int64_t offset, int32_t *toskip);
 
 int32_t mp4ff_read_sample(mp4ff_t *f, const int32_t track, const int32_t sample,
-                          int8_t **audio_buffer,  uint32_t *bytes);
+                          int8_t **audio_buffer, uint32_t *bytes);
 int32_t mp4ff_get_decoder_config(const mp4ff_t *f, const int32_t track,
-                                 uint8_t** ppBuf, uint32_t* pBufSize);
+                                 uint8_t **ppBuf, uint32_t *pBufSize);
 int32_t mp4ff_total_tracks(const mp4ff_t *f);
 int32_t mp4ff_time_scale(const mp4ff_t *f, const int32_t track);
 int32_t mp4ff_num_samples(const mp4ff_t *f, const int32_t track);
 
-uint32_t mp4ff_meta_genre_to_index(const char * genrestr);//returns 1-based index, 0 if not found
-const char * mp4ff_meta_index_to_genre(uint32_t idx);//returns pointer to static string
-
+uint32_t mp4ff_meta_genre_to_index(
+    const char *genrestr); // returns 1-based index, 0 if not found
+const char *
+mp4ff_meta_index_to_genre(uint32_t idx); // returns pointer to static string
 
 #ifdef __cplusplus
 }
